@@ -1,0 +1,402 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GCONFIG - Generate initial configuration structure</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-09-24"><meta name="DC.source" content="gConfig.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>GCONFIG - Generate initial configuration structure</h1><!--introduction--><p>This script generates the main configuration structure used for specifying the system parameters.</p><p>The user should select among the different alternatives shown throught the code below.</p><p>Once <b>gConfig</b> has been edited, <b>gCheckConfig</b> checks the configuration and extracts important information for the GUI.</p><p>See also: SART3D, gCheckConfig</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#2">Sound Scene Dimensionality</a></li><li><a href="#3">Reproduction Set-Up Dimensionality</a></li><li><a href="#4">List of Current Methods:</a></li><li><a href="#7">Audio Streaming Parameters Used in DSP System Objects</a></li><li><a href="#12">Processing Parameters</a></li><li><a href="#16">Virtual Sources</a></li><li><a href="#23">Loudspeaker Configuration</a></li><li><a href="#27">DSP System Audio</a></li><li><a href="#29">Plotting</a></li><li><a href="#30">Check Configuration and Add Additional Info</a></li><li><a href="#31">Save configuration strcuture</a></li></ul></div><p>Add folders to path if SART3D has not been initialized:</p><pre class="codeinput">SART3Dini;
+
+rootfolder = which(<span class="string">'SART3Dini'</span>);
+rootfolder = rootfolder(1:end-12);
+conf.root = rootfolder;
+
+<span class="comment">% Clear global vars</span>
+clearvars <span class="string">-global</span>;
+</pre><h2>Sound Scene Dimensionality<a name="2"></a></h2><p>Specifies the dimensionality of the virtual sound sources. '2D' - Sources positioned in 2D space (X-Y plane) '3D' - Sources positioned in 3D space (X-Y-Z space)</p><pre class="codeinput"><span class="comment">% Note: This will be useful in the future to avoid plotting 'profile view'</span>
+<span class="comment">% elements (saving computational power)</span>
+
+conf.sceneDim = <span class="string">'2D'</span>;
+</pre><h2>Reproduction Set-Up Dimensionality<a name="3"></a></h2><p>Specifies the dimensionality of the reproduction (loudspeaker) set-up. '2D' - Loudspeakers positioned in 2D space (X-Y plane) '3D' - Loudspeakers positioned in 3D space (X-Y-Z space)</p><p><b>Note</b>: <i>This will be useful in the future to avoid plotting 'profile view' elements (saving computational power)</i></p><pre class="codeinput">conf.setupDim = <span class="string">'2D'</span>;
+</pre><h2>List of Current Methods:<a name="4"></a></h2><div><ul><li>'VBAP'   - Vector Base Amplitude Panning</li><li>'AAP'    - Ambisonics Amplitude Panning</li><li>'AEP'    - Ambisonics Equivalent Panning</li><li>'HRTF'   - Head Related Transfer Function</li><li>'WFS'    - Wave Field Synthesis (Requires SFS Toolbox)</li><li>'NFCHOA' - Near-Field Compensated Higher Order Ambisonics (Requires SFS Toolbox)</li></ul></div><p>This list specifies the available (implemented) rendering methods to be used in the GUI. When creating a new rendering method, the list should be updated, as well as the call for the method initialization rutine.</p><pre class="codeinput">methods = dir([conf.root, <span class="string">'\functions\algorithms'</span>]);
+methods = methods(3:end);
+Nmethods = length(methods);
+
+conf.methods.names = cell(Nmethods,1);
+<span class="keyword">for</span> ii = 1:Nmethods
+    conf.methods.names{ii} = methods(ii).name;
+<span class="keyword">end</span>
+
+conf.methods.selected = <span class="string">'VBAP'</span>;
+</pre><p><b>Note</b>: <i>Some methods require a demanding initialization (e.g. HRTF needs to load into memory the HRIR dataset). Although the reproduction method can be changed directly during playback, if a given method has not been previously initialized, some audio dropouts are expected. This can be avoided by selecting the method here or in the GUI pop-up menu before pressing the 'play' button.</i></p><h2>Audio Streaming Parameters Used in DSP System Objects<a name="7"></a></h2><p>These parameters are used to initialize and configure the DSP System objects used for audio reproduction.</p><p><b>Sampling Frequency</b>:</p><pre class="codeinput">conf.fs = 44100;
+</pre><p><b>Selected Buffer Size</b>:</p><p>The buffer size can be changed in the GUI among the list of values displayed below:</p><pre class="codeinput">conf.bufferSize.items = {<span class="string">'16'</span>; <span class="string">'32'</span>; <span class="string">'64'</span>; <span class="string">'128'</span>; <span class="string">'256'</span>; <span class="keyword">...</span>
+                         <span class="string">'512'</span>; <span class="string">'1024'</span>; <span class="string">'2048'</span>; <span class="string">'4096'</span>; <span class="string">'8192'</span>};
+conf.bufferSize.selected = 9;
+</pre><p><b>Samples per frame in Reproduction</b>:</p><p>Number of samples used in each processing frame.</p><pre class="codeinput">conf.SamplesPerFrame = 4096;
+</pre><p><b>Queue Duration (in seconds)</b>:</p><p>Afects the initial delay when the reproduction is started.</p><pre class="codeinput">conf.QueueDuration = 0.5;
+</pre><h2>Processing Parameters<a name="12"></a></h2><p>These parameters affect the processing of audio frames during reproduction.</p><p><b>Fade/in/out smoothing</b>:</p><p>'on' - When active, consecutive signal frames are smoothly mixed to avoid audio clicks and make source movements smoother.</p><p>'off'- This is useful for rendering static scenes with no movements.</p><pre class="codeinput">conf.fadeBuffers = <span class="string">'on'</span>;
+</pre><p><b>Visualize spherical edit boxes</b>:</p><p>Spherical coordinate boxes can be eliminated from the GUI to decrease the graphical complexity.</p><pre class="codeinput">conf.viewSphEdits = <span class="string">'on'</span>;
+</pre><p><b>Spatial resolution (in meters)</b>:</p><p>The minimum distance allowed in the source movement before updating the source location. This parameter can be increased to reduce the processing (it only updates the rendering when the source has been moved more than the selected resolution).</p><pre class="codeinput">conf.sres = 0.1;
+</pre><h2>Virtual Sources<a name="16"></a></h2><p>The following cell arrays define the signals used during playback and the initial location of the virtual sources.</p><p><b>Virtual Source WAV Files</b>:</p><p>The WAV files corresponding to the virtual sources of the scene must be specified as follows:</p><pre class="codeinput">conf.VS.fileNames = {
+    <span class="string">'test_440.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'3_Hat.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'4_Arp.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'5_Clap.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'6_Loop.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'7_Snare.wav'</span>,<span class="keyword">...</span>
+    <span class="string">'8_FX.wav'</span>};
+</pre><p><b>Virtual Source Locations</b>:</p><p>The spatial location of each virtual source is also defined in a cell array using spherical coordinates ([radius, azimuth, elevation]). Angles are specified in degrees (preferably in the range -180 to 180).</p><pre class="codeinput">conf.VS.coord = {
+    [2.50, 0, 0],<span class="keyword">...</span>
+    [2.50, 10, 0],<span class="keyword">...</span>
+    [2.50, 20, 0],<span class="keyword">...</span>
+    [2.50, 30, 0],<span class="keyword">...</span>
+    [2.50, -30, 0],<span class="keyword">...</span>
+    [2.50, -20, 0],<span class="keyword">...</span>
+    [2.50, -10, 0]};
+</pre><p><b>Axes limits</b>:</p><p>Specify the axes limits from the center of coordinates in meters for allowed source movements</p><pre class="codeinput">conf.rmax = 4;
+</pre><p><b>Source names in GUI</b> (optional):</p><p>By default, the name of the sources is obtained from the defined WAV files. Alternatively, the name of the sources can be directly specified:</p><pre class="codeinput"><span class="comment">% conf.VS.names = {</span>
+<span class="comment">%     'Sine 440',...</span>
+<span class="comment">%     'Hat',...</span>
+<span class="comment">%     'Arp',...</span>
+<span class="comment">%     'Clap',...</span>
+<span class="comment">%     'Loop',...</span>
+<span class="comment">%     'Snare',...</span>
+<span class="comment">%     'FX'};</span>
+</pre><p>Alternatively, a simple script containing both things (WAV file names and source locations) can be directly included in the \audioscenes folder.</p><pre class="codeinput"><span class="comment">%test_scene;</span>
+</pre><p>You can also let the GUI obtain the name of the virtual sources from the WAVE file names just by letting empty the 'conf.VS.names' cell array.</p><h2>Loudspeaker Configuration<a name="23"></a></h2><p>Loudspeakers in the reproduction setup are defined similarly to virtual sources.</p><p><b>Loudspeaker Locations</b>: Loudspeaker locations are defined in spherical coordinates. For example, for a two-loudspeaker (or headphones) set-up:</p><pre class="codeinput">conf.LS.coord = {
+    [1.75, 45, 0],<span class="keyword">...</span>
+    [1.75, -45, 0]};
+</pre><p><b>Loudspeaker Channel Mapping</b>:</p><p>Each loudspeaker is assigned an output channel from the audio interfaces using by specifying a channel mapping vector. The first element of the vector indicates the audio channel for loudspeaker 1, the second element indicates the audio channel for loudspeaker 2, etc.</p><pre class="codeinput">conf.driver.ChannelMapping = 1:size(conf.LS.coord,2);
+</pre><p>Alternatively, a script containing both cell arrays can be directly loaded from the \setups folder:</p><pre class="codeinput"><span class="comment">%spat_ls_2;</span>
+</pre><h2>DSP System Audio<a name="27"></a></h2><p>The following parameters affect the audio hardware configuration.</p><p>Set DSP System device name. The device name can be directly specified here or selected from the GUI's pop-up menu.</p><pre class="codeinput"><span class="comment">%conf.driver.DeviceName = 'ASIO4ALL v2';</span>
+</pre><h2>Plotting<a name="29"></a></h2><pre class="codeinput"><span class="comment">% Plot contributing loudspeakers when moving a source</span>
+<span class="comment">% (May slow down the performance!) This can be also changed in the GUI.</span>
+conf.plot.activels = 1;
+</pre><h2>Check Configuration and Add Additional Info<a name="30"></a></h2><p>The function <b>gCheckConfig</b> checks the validity of the configuration and prepares the structure to be used by the GUI.</p><pre class="codeinput">conf = gCheckConfig(conf);
+</pre><img vspace="5" hspace="5" src="gConfig_01.png" alt=""> <h2>Save configuration strcuture<a name="31"></a></h2><p>Finally, the configuration structure is saved.</p><pre class="codeinput">save <span class="string">'.\configurations\conf.mat'</span> <span class="string">conf</span>
+
+clear <span class="string">all</span>;
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% GCONFIG - Generate initial configuration structure
+%
+% This script generates the main configuration structure used for
+% specifying the system parameters.
+%
+% The user should select among the different alternatives shown throught
+% the code below.
+%
+% Once *gConfig* has been edited, *gCheckConfig* checks the configuration
+% and extracts important information for the GUI.
+%
+% See also: SART3D, gCheckConfig
+
+%%
+% Add folders to path if SART3D has not been initialized:
+SART3Dini;
+
+rootfolder = which('SART3Dini');
+rootfolder = rootfolder(1:end-12);
+conf.root = rootfolder;
+
+% Clear global vars
+clearvars -global;
+
+%% Sound Scene Dimensionality
+% Specifies the dimensionality of the virtual sound sources.
+% '2D' - Sources positioned in 2D space (X-Y plane)
+% '3D' - Sources positioned in 3D space (X-Y-Z space)
+
+% Note: This will be useful in the future to avoid plotting 'profile view'
+% elements (saving computational power)
+
+conf.sceneDim = '2D';
+
+%% Reproduction Set-Up Dimensionality
+% Specifies the dimensionality of the reproduction (loudspeaker) set-up. 
+% '2D' - Loudspeakers positioned in 2D space (X-Y plane)
+% '3D' - Loudspeakers positioned in 3D space (X-Y-Z space)
+%
+% *Note*: _This will be useful in the future to avoid plotting 'profile view'
+% elements (saving computational power)_
+
+conf.setupDim = '2D';
+
+%% List of Current Methods:
+% * 'VBAP'   - Vector Base Amplitude Panning
+% * 'AAP'    - Ambisonics Amplitude Panning
+% * 'AEP'    - Ambisonics Equivalent Panning
+% * 'HRTF'   - Head Related Transfer Function
+% * 'WFS'    - Wave Field Synthesis (Requires SFS Toolbox)
+% * 'NFCHOA' - Near-Field Compensated Higher Order Ambisonics (Requires SFS Toolbox)
+
+%%
+% This list specifies the available (implemented) rendering methods to be
+% used in the GUI. When creating a new rendering method, the list should be
+% updated, as well as the call for the method initialization rutine.
+
+methods = dir([conf.root, '\functions\algorithms']);
+methods = methods(3:end);
+Nmethods = length(methods);
+
+conf.methods.names = cell(Nmethods,1);
+for ii = 1:Nmethods
+    conf.methods.names{ii} = methods(ii).name;
+end
+
+conf.methods.selected = 'VBAP';
+
+%%
+% *Note*: _Some methods require a demanding initialization (e.g. HRTF needs to
+% load into memory the HRIR dataset). Although the reproduction method can
+% be changed directly during playback, if a given method has not been
+% previously initialized, some audio dropouts are expected. This can be
+% avoided by selecting the method here or in the GUI pop-up menu before
+% pressing the 'play' button._
+
+%% Audio Streaming Parameters Used in DSP System Objects
+% These parameters are used to initialize and configure the DSP System
+% objects used for audio reproduction.
+
+%% 
+% *Sampling Frequency*:
+conf.fs = 44100;
+
+%% 
+% *Selected Buffer Size*:
+%
+% The buffer size can be changed in the GUI among the list of values
+% displayed below:
+conf.bufferSize.items = {'16'; '32'; '64'; '128'; '256'; ... 
+                         '512'; '1024'; '2048'; '4096'; '8192'};                     
+conf.bufferSize.selected = 9;
+
+%% 
+% *Samples per frame in Reproduction*:
+%
+% Number of samples used in each processing frame.
+conf.SamplesPerFrame = 4096;
+
+%% 
+% *Queue Duration (in seconds)*:
+%
+% Afects the initial delay when the reproduction is started.
+conf.QueueDuration = 0.5;
+
+%% Processing Parameters
+% These parameters affect the processing of audio frames during
+% reproduction. 
+
+%%
+% *Fade/in/out smoothing*:
+%
+% 'on' - When active, consecutive signal frames are smoothly mixed to avoid
+% audio clicks and make source movements smoother.
+%
+% 'off'- This is useful for rendering static scenes with no movements.
+conf.fadeBuffers = 'on';
+
+%%
+% *Visualize spherical edit boxes*:
+%
+% Spherical coordinate boxes can be eliminated from the GUI to decrease the
+% graphical complexity.
+conf.viewSphEdits = 'on';
+
+%%
+% *Spatial resolution (in meters)*:
+%
+% The minimum distance allowed in the source movement before updating the
+% source location. This parameter can be increased to reduce the processing
+% (it only updates the rendering when the source has been moved more than
+% the selected resolution).
+conf.sres = 0.1;
+
+
+%% Virtual Sources
+% The following cell arrays define the signals used during playback and the
+% initial location of the virtual sources.
+
+%% 
+% *Virtual Source WAV Files*:
+%
+% The WAV files corresponding to the virtual sources of the scene must be
+% specified as follows:
+
+conf.VS.fileNames = {
+    'test_440.wav',...
+    '3_Hat.wav',...
+    '4_Arp.wav',...
+    '5_Clap.wav',...
+    '6_Loop.wav',...
+    '7_Snare.wav',...
+    '8_FX.wav'};
+
+%%
+% *Virtual Source Locations*:
+%
+% The spatial location of each virtual source is also defined in a cell
+% array using spherical coordinates ([radius, azimuth, elevation]). Angles
+% are specified in degrees (preferably in the range -180 to 180).
+
+conf.VS.coord = {
+    [2.50, 0, 0],...
+    [2.50, 10, 0],...
+    [2.50, 20, 0],...
+    [2.50, 30, 0],...
+    [2.50, -30, 0],...
+    [2.50, -20, 0],...
+    [2.50, -10, 0]};
+
+%%
+% *Axes limits*:
+%
+% Specify the axes limits from the center of coordinates in meters for
+% allowed source movements
+
+conf.rmax = 4;
+
+
+%%
+% *Source names in GUI* (optional):
+%
+% By default, the name of the sources is obtained from the defined WAV
+% files. Alternatively, the name of the sources can be directly specified:
+
+% conf.VS.names = {
+%     'Sine 440',...
+%     'Hat',...
+%     'Arp',...
+%     'Clap',...
+%     'Loop',...
+%     'Snare',...
+%     'FX'};
+
+%% 
+% Alternatively, a simple script containing both things (WAV file names and
+% source locations) can be directly included in the \audioscenes folder.
+
+%test_scene;
+
+%%
+% You can also let the GUI obtain the name of the virtual sources from the
+% WAVE file names just by letting empty the 'conf.VS.names' cell array.
+
+%% Loudspeaker Configuration
+% Loudspeakers in the reproduction setup are defined similarly to virtual
+% sources.
+%
+%% 
+% *Loudspeaker Locations*:
+% Loudspeaker locations are defined in spherical coordinates. For example, 
+% for a two-loudspeaker (or headphones) set-up: 
+conf.LS.coord = {
+    [1.75, 45, 0],...
+    [1.75, -45, 0]};
+
+
+%%
+% *Loudspeaker Channel Mapping*:
+%
+% Each loudspeaker is assigned an output channel from the audio interfaces
+% using by specifying a channel mapping vector. The first element of the
+% vector indicates the audio channel for loudspeaker 1, the second element
+% indicates the audio channel for loudspeaker 2, etc.
+
+conf.driver.ChannelMapping = 1:size(conf.LS.coord,2);
+
+%%
+% Alternatively, a script containing both cell arrays can be directly
+% loaded from the \setups folder:
+
+%spat_ls_2;
+
+%% DSP System Audio 
+% The following parameters affect the audio hardware configuration.
+
+%%
+% Set DSP System device name.
+% The device name can be directly specified here or selected from the GUI's
+% pop-up menu.
+
+%conf.driver.DeviceName = 'ASIO4ALL v2';
+
+%% Plotting
+
+% Plot contributing loudspeakers when moving a source
+% (May slow down the performance!) This can be also changed in the GUI.
+conf.plot.activels = 1;
+
+%%  Check Configuration and Add Additional Info
+% The function *gCheckConfig* checks the validity of the configuration and
+% prepares the structure to be used by the GUI.
+conf = gCheckConfig(conf);
+ 
+%% Save configuration strcuture
+% Finally, the configuration structure is saved.
+save '.\configurations\conf.mat' conf
+
+clear all;
+##### SOURCE END #####
+--></body></html>
