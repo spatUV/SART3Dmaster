@@ -73,6 +73,9 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 ![Image](doc/img/sources.png)
 
+Check the **Active loudspeakers" checkbox "You can see which are the active loudspeakers contributing to the rendering of a given sound source when you are moving it. For example, when using WFS with a circular loudspeaker setup you will see something like this. Note that graphics operations slow down the performance, so it is recommended to uncheck this option if you have moderate computational resources.
+
+![Image](doc/img/activels.png) ![Image](doc/img/activeaxes.png) 
 
 How can I change the setup?
 ---------------------------------
