@@ -192,7 +192,7 @@ We save also the above rendering function in /algorithms/CLOSEST. Then, we inclu
     case 'CLOSEST'
         [H,I] = gCLOSEST(data.vSSph(:,ii)); % data.VSSph(:,ii) are the spherical coords of the selected source
 ```
-Finally, to let the user change among this method and the rest by using the pop-up menu, go to <code>‘GPopupmenu.m’</code> object and add a case for the new algorithm within the  switch <code>conf.methods.names{get(handles.pmMethod, 'Value')}</code> statement:
+Finally, to let the user change among this method and the rest by using the pop-up menu, go to <code>‘GPopupmenu.m’</code> object and add a case for the new algorithm within the <code>switch conf.methods.names{get(handles.pmMethod, 'Value')}</code> statement:
 
 ```Matlab
                     case  'CLOSEST'
