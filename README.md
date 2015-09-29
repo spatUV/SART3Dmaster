@@ -215,7 +215,7 @@ If you have questions, bug reports or feature requests, please use the [Issue
 Section on the website](https://github.com/spatUV/SART3Dmaster/issues) to report them. 
 
 If you use the Toolbox for your publications please cite our AES Convention paper:  
-G. Moreno, M. Coboos, J. Lopez-Ballester, P. Gutierrez-Parera, J. Segura and A. M. Torres, "*On the Development of a MATLAB-based Tool for Real-time Spatial Audio Rendering*", in Proceedings of the 138th Convention of the Audio Engineering Society, Warsaw, Poland, 2015.
+G. Moreno, M. Cobos, J. Lopez-Ballester, P. Gutierrez-Parera, J. Segura and A. M. Torres, "*On the Development of a MATLAB-based Tool for Real-time Spatial Audio Rendering*", in Proceedings of the 138th Convention of the Audio Engineering Society, Warsaw, Poland, 2015.
 
 Copyright (c) 2011-2015   
 Signal Processing and Acoustic Technology (SPAT) Group.  
