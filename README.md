@@ -8,9 +8,9 @@ SART3D: 3D Spatial Audio Reproduction Toolbox
 **[Requirements](#requirements)**  
 **[What can I do with SART3D?](#description)**   
 **[Which spatial audio rendering methods are supported?](#methods)**    
-**[How do I give it a quick try](#usage)**  
-**[How can I change the set-up](#changesetup)**   
-  [Can I see an example](#setupexample)   
+**[How do I give it a quick try?](#usage)**  
+**[How can I change the set-up?](#changesetup)**   
+  [Can I see an example?](#setupexample)   
 **[How do I create a new rendering method?](#newmethod)**   
 **[Credits and License](#credits-and-license)**
 
@@ -25,7 +25,7 @@ Requirements
 
 
 What can I do with SART3D?
---------------------------
+----------------------------------
 
 SART3D lets you move in real time virtual audio sources from a set of WAV files using multiple spatial audio rendering methods. You can specify locations of virtual sources and loudspeakers and change among the different available rendering methods.
 
@@ -33,7 +33,7 @@ The programmatic structure of the GUI lets the user experience with any loudspea
 The modular design of the Toolbox lets the user create new rendering methods and experiment with different parameters. As a result, SART3D is a very useful tool for spatial audio research and education.
 
 Which spatial audio rendering methods are supported?
-----------------------------------------------------
+-----------------------------------------------------------------
 
 Currently, the toolbox incorporates:
 
@@ -47,7 +47,7 @@ Currently, the toolbox incorporates:
 
 
 How do I give it a quick try?
------------------------------
+---------------------------------
 
 To start playing with SART3D, just be sure to have an available ASIO driver in your system.
 
@@ -73,3 +73,72 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 ![Image](doc/img/sources.png)
 
+
+How can I change the setup?
+---------------------------------
+
+First, put your WAV files in a folder within the /audioscenes directory.
+
+The script <code>‘gConfig.m’</code> lets the user create a valid configuration structure. Please, navigate throughout the script to create a configuration fitting your needs. You can also open the <code>‘gConfig.html’ </code> page to see a published version of the script.
+
+Once you have modified and run ‘gConfig’ according to the desired configuration, a new <code>‘conf.mat’</code> file will be in the /configurations directory. Then, you can specify this new configuration in SART3D:
+
+```Matlab
+SART3D('conf.mat');
+```
+### Can I see an example ?
+
+Yes, let’s create a 5 loudspeaker setup instead of the default stereo setup.
+Go to <code>‘gConfig.m’</code> and specify the spherical coordinates of the loudspeakers in the **‘Loudspeaker Locations’** section:
+
+```Matlab
+conf.LS.coord = {
+    	[1.75, +30, 0],...
+    	[1.75, 0, 0],...
+[1.75, -30, 0],...
+[1.75, -150, 0],...
+[1.75, +150, 0]};
+```
+Specify the correct audio channel mapping in your set-up, i.e. which audio channel in your audio interface corresponds to loudspeaker 1, which one to loudspeaker 2, etc. By default, loudspeaker 1 goes to audio channel 1, loudspeaker 2 to channel 2, etc. However you can specify the desired mapping as follows:
+
+```Matlab
+conf.driver.ChannelMapping = [5 4 3 2 1].
+```
+This would tell the software that loudspeaker one is driven by the output audio channel 5, loudspeaker 2 by audio channel 4 and so on.
+Save and run the <code>‘gConfig’</code> script to overwrite the <code>‘conf.mat’</code> file. Now, run again SART3D specifying the new configuration:
+
+```Matlab
+SART3D('conf.mat');
+```
+
+![Image](doc/img/fivels.png)
+
+How do I create a new rendering method?
+---------------------------------
+
+To create a new rendering method, you have to modify some of the functions in SART3D. 
+Let us create a toy example that consists in selecting the closest loudspeaker to the virtual source. Let’s call it **CLOSEST**.
+
+First, create a folder for the method in the /algorithms directory:
+
+![Image](doc/img/folders.png)
+
+Now edit <code>‘gCheckConfig.m’</code> to let the GUI know how to initialize the method. In the **‘Rendering Method Initialization’** section , enter a new case for the method within the <code>switch conf.methods.selected statement</code>:
+
+```Matlab
+case 'CLOSEST' % CLOSEST
+        % ----------------------------------------------------------------
+        % Initialization routine
+        % ----------------------------------------------------------------
+        CLOSESTstart;
+```
+
+Create the initialization script <code>‘CLOSESTstart.m’</code> in the CLOSEST folder. In this case, the initialization script just specifies that the rendering filter is just a gain (one scalar coefficient):
+
+```Matlab
+% Number of coefficients (just a gain)
+conf.nCoeffs = 1;
+ 
+% Add all the necessary parameters of the method in the conf structure (in this case, there are not any).
+conf.CLOSEST = '';
+```
