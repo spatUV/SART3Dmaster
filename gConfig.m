@@ -1,5 +1,3 @@
-prueba
-
 %% GCONFIG - Generate initial configuration structure
 %
 % This script generates the main configuration structure used for
