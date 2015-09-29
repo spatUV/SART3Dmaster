@@ -1,3 +1,5 @@
+![Image](doc/img/spat.png)
+
 SART3D: 3D Spatial Audio Reproduction Toolbox
 =============================================
 
@@ -49,15 +51,25 @@ How do I give it a quick try?
 
 To start playing with SART3D, just be sure to have an available ASIO driver in your system.
 
-1. First, go to Matlab’s Preferences and set DSP System Toolbox Audio API to ASIO.
+*Step 1:* First, go to Matlab’s Preferences and set DSP System Toolbox Audio API to ASIO.
 
 ![Image](doc/img/ASIO.png)
 
+*Step 2:* Then, change the current Matlab’s working folder to your SART3D folder and type: 
 
-2. Then, change the current Matlab’s working folder to your SART3D folder and type SART3D. The toolbox is configured to load automatically a default two-loudspeaker set-up (Figure 2).
-3. Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the ASIO buffer size and the rendering method (Figure 3).
-4. To start listening to a given sound source, select the ones that you want to hear using the checkboxes and push the play button (in this example, we select source 3). Drag and drop the sources to different locations or specify positions using the input edit text boxes (Figure 4). Stop the playback by pressing again the play button.
+```Matlab
+SART3Dini;
+SART3D
+```
+This will add the folder structure into Matlab’s path and will run the main GUI. The toolbox is configured to load automatically a default two-loudspeaker set-up.
 
+![Image](doc/img/default.png)
 
+*Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the ASIO buffer size and the rendering method.
 
+![Image](doc/img/driver.png)
+
+*Step 4:* To start listening to a given sound source, select the ones that you want to hear using the checkboxes and push the play button in the top left corner. Drag and drop the sources to different locations or specify positions using the input edit text boxes. Stop the playback by pressing again the play button.
+
+![Image](doc/img/sources.png)
 
