@@ -67,11 +67,11 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 *Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the ASIO buffer size and the rendering method.
 
-![Image](doc/img/driver.png){: .center-image }
+![Image](doc/img/driver.png)
 
 *Step 4:* To start listening to a given sound source, select the ones that you want to hear using the checkboxes and push the play button in the top left corner. Drag and drop the sources to different locations or specify positions using the input edit text boxes. Stop the playback by pressing again the play button.
 
-![Image](doc/img/sources.png){: .center-image }
+![Image](doc/img/sources.png)
 
 
 How can I change the setup?
