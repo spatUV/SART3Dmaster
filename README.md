@@ -6,12 +6,12 @@ SART3D: 3D Spatial Audio Reproduction Toolbox
 ### Table of Contents
 
 **[Requirements](#requirements)**  
-**[What can I do with SART3D?](#description)**   
-**[Which spatial audio rendering methods are supported?](#methods)**    
-**[How do I give it a quick try?](#usage)**  
-**[How can I change the set-up?](#changesetup)**   
-  [Can I see an example?](#setupexample)   
-**[How do I create a new rendering method?](#newmethod)**   
+**[What can I do with SART3D?](#what-can-i-do-with-sart3d)**   
+**[Which spatial audio rendering methods are supported?](#which-spatial-audio-rendering-methods-are-supported)**    
+**[How do I give it a quick try?](#how-do-i-give-it-a-quick-try)**  
+**[How can I change the set-up?](#how-can-i-change-the-setup)**   
+  [Can I see an example?](#can-i-see-an-example)   
+**[How do I create a new rendering method?](#how-do-i-create-a-new-rendering-method)**   
 **[Credits and License](#credits-and-license)**
 
 Requirements
@@ -67,11 +67,11 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 *Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the ASIO buffer size and the rendering method.
 
-![Image](doc/img/driver.png)
+![Image](doc/img/driver.png){: .center-image }
 
 *Step 4:* To start listening to a given sound source, select the ones that you want to hear using the checkboxes and push the play button in the top left corner. Drag and drop the sources to different locations or specify positions using the input edit text boxes. Stop the playback by pressing again the play button.
 
-![Image](doc/img/sources.png)
+![Image](doc/img/sources.png){: .center-image }
 
 
 How can I change the setup?
@@ -197,3 +197,23 @@ Finally, to let the user change among this method and the rest by using the pop-
                             CLOSESTstart;
                         end    
 ```
+
+Credits and License
+----------------------------------
+
+This is the source distribution of **SART3D: 3D Spatial Audio Rendering Toolbox** licensed
+under the GPLv3+. Please consult the file COPYING for more information about
+this license.
+
+Website: https://github.com/spatUV/SART3Dmaster
+
+If you have questions, bug reports or feature requests, please use the [Issue
+Section on the website](https://github.com/spatUV/SART3Dmaster/issues) to report them. 
+
+If you use the Toolbox for your publications please cite our AES Convention paper:  
+G. Moreno, M. Coboos, J. Lopez-Ballester, P. Gutierrez-Parera, J. Segura and A. M. Torres, "*On the Development of a MATLAB-based Tool for Real-time Spatial Audio Rendering*", in Proceedings of the 138th Convention of the Audio Engineering Society, Warsaw, Poland, 2015.
+
+Copyright (c) 2011-2015  
+Signal Processing and Acoustic Technology (SPAT) Group,
+Universitat de València
+Av. de la Universitat s/n, 46100, Valencia, Spain 
