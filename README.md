@@ -92,6 +92,10 @@ Yes, let’s create a 5 loudspeaker setup instead of the default stereo setup.
 Go to <code>‘gConfig.m’</code> and specify the spherical coordinates of the loudspeakers in the **‘Loudspeaker Locations’** section:
 
 ```Matlab
+% *Loudspeaker Locations*:
+% Loudspeaker locations are defined in spherical coordinates. For example, 
+% for a two-loudspeaker (or headphones) set-up: 
+
 conf.LS.coord = {
     	[1.75, +30, 0],...
     	[1.75, 0, 0],...
@@ -141,4 +145,55 @@ conf.nCoeffs = 1;
  
 % Add all the necessary parameters of the method in the conf structure (in this case, there are not any).
 conf.CLOSEST = '';
+```
+
+Now, we have to specify the function that calculates the filter coefficients and selects the contributing loudspeakers in our new method. We call it <code>‘gCLOSEST.m’</code>:
+
+```Matlab
+function [H,I] = gCLOSEST(sph)
+%GCLOSEST Example of Algorithm. Selects the closest loudspeaker for the
+%rendering.
+%
+% Usage:
+%   [H,I] = gCLOSEST(sph)
+%
+% Input parameters:
+%   sph - Spherical coordinates of the virtual source [r,Az,El].
+%
+% Output paramters:
+%   H - Gain of the selected loudspeaker.
+%   I - Selected loudspeaker.
+%
+% See also: StSLstart, gStTL
+ 
+global conf;
+ 
+car = gSph2Car(sph);	%spherical to Cartesian coordinates
+ 
+% Calculate distance to each loudspeaker
+dist = sqrt((conf.LS.car(1,:)-car(1)).^2 + (conf.LS.car(2,:)-car(2)).^2 + (conf.LS.car(3,:)-car(3)).^2);
+
+% Find minimum 
+[d,I] = min(dist);
+ 
+% Apply distance attenuation factor
+r = max(d, conf.rMin);
+H = conf.rMin/r;
+```
+
+We save also the above rendering function in /algorithms/CLOSEST. Then, we include in the filter updating function <code>‘gRefreshH.m’</code> the new case within the <code>switch conf.methods.selected statement</code>:
+
+```Matlab
+% INCLUDE HERE MORE CASES FOR NEW RENDERING METHODS!    
+    case 'CLOSEST'
+        [H,I] = gCLOSEST(data.vSSph(:,ii)); % data.VSSph(:,ii) are the spherical coords of the selected source
+```
+Finally, to let the user change among this method and the rest by using the pop-up menu, go to <code>‘GPopupmenu.m’</code> object and add a case for the new algorithm within the  switch <code>conf.methods.names{get(handles.pmMethod, 'Value')}</code> statement:
+
+```Matlab
+                    case  'CLOSEST'
+                        conf.nCoeffs = 1;
+                        if isfield(conf,'CLOSEST')==0
+                            CLOSESTstart;
+                        end    
 ```
