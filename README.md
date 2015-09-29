@@ -12,7 +12,7 @@ SART3D: 3D Spatial Audio Reproduction Toolbox
 **[How can I change the set-up?](#how-can-i-change-the-setup)**   
   [Can I see an example?](#can-i-see-an-example)   
 **[How do I create a new rendering method?](#how-do-i-create-a-new-rendering-method)**   
-**[Credits and License](#credits-and-license)**
+**[Credits and License](#credits-and-license)**    
 **[Authors](#authors)**
 
 Requirements
@@ -224,7 +224,7 @@ Av. de la Universitat s/n, 46100, Valencia, Spain.
 
 Authors
 ------------
-
-Gabriel Moreno Ibarra
-Maximo Cobos
-Jesus Lopez-Ballester
+ 
+* Gabriel Moreno Ibarra
+* Maximo Cobos
+* Jesus Lopez-Ballester
