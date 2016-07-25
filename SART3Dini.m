@@ -8,7 +8,6 @@ function SART3Dini()
 %
 % See also: SART3D, gConfig
 
-
 %*****************************************************************************
 % Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
@@ -36,15 +35,14 @@ function SART3Dini()
 % https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
 %*****************************************************************************
 
-
-rootfolder = which('SART3Dini');
-rootfolder = rootfolder(1:end-12);
-
+rootfolder = getrootfolder();
 addpath(rootfolder);
-addpath(genpath([rootfolder,'\audioscenes']));
-addpath([rootfolder,'\configurations']);
-addpath(genpath([rootfolder,'\functions']));
-addpath([rootfolder,'\gui_elements']);
-addpath([rootfolder,'\images']);
-addpath([rootfolder,'\objects']);
-addpath([rootfolder,'\setups']);
+addpath(genpath([rootfolder,'/audioscenes']));
+addpath([rootfolder,'/configurations']);
+addpath(genpath([rootfolder,'/functions']));
+addpath([rootfolder,'/gui_elements']);
+addpath([rootfolder,'/images']);
+addpath([rootfolder,'/objects']);
+addpath([rootfolder,'/setups']);
+
+clearvars -global;

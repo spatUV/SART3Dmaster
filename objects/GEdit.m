@@ -1,71 +1,90 @@
-%*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
-%                         SPAT, ETSE, Universitat de València                *
-%                         46100, Burjassot, Valencia, Spain                  *
-%                                                                            *
-% This file is part of the SART3D: 3D Spatial Audio Rendering Toolbox.       *
-%                                                                            *
-% SART3D is free software:  you can redistribute it and/or modify it  under  *
-% the terms of the  GNU  General  Public  License  as published by the  Free *
-% Software Foundation, either version 3 of the License,  or (at your option) *
-% any later version.                                                         *
-%                                                                            *
-% SART3D is distributed in the hope that it will be useful, but WITHOUT ANY  *
-% WARRANTY;  without even the implied warranty of MERCHANTABILITY or FITNESS *
-% FOR A PARTICULAR PURPOSE.                                                  *
-% See the GNU General Public License for more details.                       *
-%                                                                            *
-% You should  have received a copy  of the GNU General Public License  along *
-% with this program.  If not, see <http://www.gnu.org/licenses/>.            *
-%                                                                            *
-% SART3D is a toolbox for real-time spatial audio prototyping that lets you  *
-% move in real time virtual audio sources from a set of WAV files using      *
-% multiple spatial audio rendering methods.                                  *
-%                                                                            *
-% https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
-%*****************************************************************************
-
-classdef GEdit < GUicontrol
-    %GEdit is a customized text uicontrol.
+classdef GEdit < GUicontrol 
+    %GEdit is a customized text uicontrol used in edit coordinate textboxes
  
     properties
-        N % Number of virtual source.
-        Magnitude % Coordinate type (radius, azimuth, elevation, x, y, z).
-        GVS % Related virtual source object (in plan view).
-        GVSProfile % Related virtual source object (in profile view).
+        N               % Number of virtual source.
+        Magnitude       % Coordinate type (radius, azimuth, elevation, x, y, z).
+        VS              % Related VSource virtual source object.
+        rmax            % Maximum radius value in GUI
+        edithandles;    % Other GEdit edit textboxes handles
     end
     
     methods
-        function obj = GEdit(parent, string, tag, bounds, n, magnitude, gVS, gVSProfile)
+        function obj = GEdit(parent, string, tag, bounds, n, magnitude, gVS, rmax)
             % Constructor.
-            % parent - Parent figure.
-            % string - Text with value.
-            % tag - Label (to be used with guihandles).
-            % bounds - Uicontrol dimensions.
-            % n - Number of virtual source.
-            % Magnitude - Coordinate type.
-            % gVS - Related virtual source object (plan view).
-            % gVSProfile - Related virtual source object (profile view).
+            % parent        - Parent figure.
+            % string        - Text with value.
+            % tag           - Label (to be used with guihandles).
+            % bounds        - Uicontrol dimensions.
+            % n             - Number of virtual source.
+            % Magnitude     - Coordinate type.
+            % gVS           - Related virtual source object (plan view).
+            % rmax          - Maximum radius value in GUI
+
          
             % SuperClass constructor:
-            obj = obj@GUicontrol(parent, 'edit', string, tag, bounds);
+            obj = obj@GUicontrol(parent, 'edit', string, tag, bounds, []);
   
             % Load properties:
             obj.N = n;
             obj.Magnitude = magnitude;
-            obj.GVS = gVS;
-            obj.GVSProfile = gVSProfile;
+            obj.VS = gVS;
+            obj.rmax = rmax;
                         
             % Graphical aspects:
             setBackgroundColor(obj, 'w'); % Default white
         end
         
+        function saveHandles(hObject,fig)
+            % Stores handles to other GEdit textboxes
+            handles = guihandles(fig);
+            hObject.edithandles.car1 = handles.editsVSCar_1;
+            hObject.edithandles.car2 = handles.editsVSCar_2;
+            hObject.edithandles.car3 = handles.editsVSCar_3;
+            hObject.edithandles.sph1 = handles.editsVSSph_1;
+            hObject.edithandles.sph2 = handles.editsVSSph_2;
+            hObject.edithandles.sph3 = handles.editsVSSph_3;
+        end
+        
+        function updateEdits(hObject,coords,system)
+            % This is a very important function, the one that updates all
+            % the required objects (coordinate edit boxes) and virtual
+            % source location.
+            % hObject - Reference object.
+            % coords  - Coordinate vector.
+            % system  - 'car' (Cartesian coordinates) or 'sph' (spherical)
+            
+            if strcmp(system,'car')
+                set(hObject.edithandles.car1(hObject.N), 'String', num2str(coords(1), 3));
+                set(hObject.edithandles.car2(hObject.N), 'String', num2str(coords(2), 3));
+                set(hObject.edithandles.car3(hObject.N), 'String', num2str(coords(3), 3));
+                coords = gCar2Sph(coords);
+                set(hObject.edithandles.sph1(hObject.N), 'String', num2str(coords(1), 3));
+                set(hObject.edithandles.sph2(hObject.N), 'String', num2str(coords(2), 3));
+                set(hObject.edithandles.sph3(hObject.N), 'String', num2str(coords(3), 3));
+                
+                % Update Virtual Source Location in GUI
+                updatePos(hObject.VS, coords.');
+            elseif strcmp(system,'sph')
+                set(hObject.edithandles.sph1(hObject.N), 'String', num2str(coords(1), 3));
+                set(hObject.edithandles.sph2(hObject.N), 'String', num2str(coords(2), 3));
+                set(hObject.edithandles.sph3(hObject.N), 'String', num2str(coords(3), 3));
+                
+                % Update Virtual Source Location in GUI
+                updatePos(hObject.VS, coords.');
+                coords = gSph2Car(coords); 
+                set(hObject.edithandles.car1(hObject.N), 'String', num2str(coords(1), 3));
+                set(hObject.edithandles.car2(hObject.N), 'String', num2str(coords(2), 3));
+                set(hObject.edithandles.car3(hObject.N), 'String', num2str(coords(3), 3));
+            end  
+            % Update Renderer Filters
+            updateRenderer(hObject.VS);   
+        end
+        
         function callback(hObject, ~, ~)
             % Actions to performed when interacting with the object
+            % Checks the input 
             % hObject - Object reference
-            
-            % Load global variables needed:
-            global conf handles 
             
             % Value in the EditText:
             value = str2double(getString(hObject));
@@ -76,8 +95,8 @@ classdef GEdit < GUicontrol
                     value = roundn(value, -3); % Round to 3 digits:
                     setString(hObject, num2str(value));
                     
-                    if value < 0 || value > 2*conf.rMin % Permitted range
-                        errordlg(['The value must be between 0 and ' num2str(2*conf.rMin) '.'], 'Error');
+                    if value < 0 || value > hObject.rmax % Permitted range
+                        errordlg(['The value must be between 0 and ' num2str(hObject.rmax) '.'], 'Error');
                         return;
                     end
                 elseif hObject.Magnitude == 2 % (2 corresponds to azimuth)
@@ -105,78 +124,28 @@ classdef GEdit < GUicontrol
                     value = roundn(value, -2); % Rount to 2 decimal digits
                     setString(hObject, num2str(value));
                     
-                    if value < -2*conf.rMin || value > 2*conf.rMin % Check in range
-                        errordlg(['The value must be between -' num2str(2*conf.rMin) ' and ' num2str(2*conf.rMin) '.'], 'Error');
+                    if value < -hObject.rmax || value > hObject.rmax % Check in range
+                        errordlg(['The value must be between -' num2str(hObject.rmax) ' and ' num2str(hObject.rmax) '.'], 'Error');
                         return;
                     end
                 end
                 
-                % Once the values have been checked, we access data and
-                % graphical objects in the GUI
-                data = guidata(getParent(hObject));
-
                 % GEdit (spherical coordinates):
                 if hObject.Magnitude < 4
-                    % Insert coordinate value in data
-                    data.vSSph(hObject.Magnitude, hObject.N) = value;
+                    % Insert coordinate value in object data
+                    hObject.VS.coord(hObject.Magnitude) = value;
+                    hObject.updateEdits(hObject.VS.coord.','sph')
                     
-                    % Coordinates of the source:
-                    r = data.vSSph(1, hObject.N);
-                    theta = data.vSSph(2, hObject.N);
-                    elevation = data.vSSph(3, hObject.N);
-                    
-                    % Update Cartesian coordinates edits (x,y,z)
-                    vSCar = gSph2Car([r; theta; elevation]);
-                    set(handles.editsVSCar_1(hObject.N), 'String', num2str(vSCar(1), 3));
-                    set(handles.editsVSCar_2(hObject.N), 'String', num2str(vSCar(2), 3));
-                    set(handles.editsVSCar_3(hObject.N), 'String', num2str(vSCar(3), 3));
-                
                 % GEdit (cartesian coordinates):
                 else
                     % Coordinates of the source:
-                    X = str2double(get(handles.editsVSCar_1(hObject.N), 'String'));
-                    Y = str2double(get(handles.editsVSCar_2(hObject.N), 'String'));
-                    Z = str2double(get(handles.editsVSCar_3(hObject.N), 'String'));
-
-                    % Insert coordinates in GUI data (in spherical):
-                    data.vSSph(:, hObject.N) = gCar2Sph([X, Y, Z]);
+                    X = str2double(get(hObject.edithandles.car1(hObject.N), 'String'));
+                    Y = str2double(get(hObject.edithandles.car2(hObject.N), 'String'));
+                    Z = str2double(get(hObject.edithandles.car3(hObject.N), 'String'));
                     
-                    % Coordinates in spherical:
-                    r = data.vSSph(1, hObject.N);
-                    theta = data.vSSph(2, hObject.N);
-                    elevation = data.vSSph(3, hObject.N);
-
-                    % Update Spherical coordinate edits
-                    if strcmp(conf.viewSphEdits, 'on')
-                        set(handles.editsVSSph_1(hObject.N), 'String', num2str(r, 3));
-                        set(handles.editsVSSph_2(hObject.N), 'String', num2str(theta, 3));
-                        set(handles.editsVSSph_3(hObject.N), 'String', num2str(elevation, 2));
-                    end
+                    hObject.updateEdits([X Y Z].','car')              
                 end
-                
-                % Load new coordinates into virtual source object
-                % in plan view and profile view:
-                setCoord(hObject.GVS, [r, theta, elevation]);
-                setCoord(hObject.GVSProfile, [r, theta, elevation]);
-                gSetSourcePos(handles.axes_plan, handles.axes_profile,...
-                hObject.GVS, hObject.GVSProfile);
-
-                % Set new virtual source object bounds
-                % (for detecting pointer on virtual source object)
-                vSPos = get(handles.textsVS(hObject.N), 'Position');
-                vSPosProfile = get(handles.textsVSProfile(hObject.N), 'Position');
-                data.VSxy(1,hObject.N) = vSPos(1) + vSPos(3)/2;
-                data.VSxy(2,hObject.N) = vSPos(2) + vSPos(4)/2;
-                data.VSyz(1,hObject.N) = vSPosProfile(1) + vSPosProfile(3)/2;
-                data.VSyz(2,hObject.N) = vSPosProfile(2) + vSPosProfile(4)/2;
-            
-            
-                % Save GUI data:
-                guidata(getParent(hObject), data);
-                
-                % Update rendering filters:
-                gRefreshH(getParent(hObject), hObject.N);
-                                
+                                              
             else % Not a numeric value
                 errordlg('Introduce a numeric value.', 'Error');
             end

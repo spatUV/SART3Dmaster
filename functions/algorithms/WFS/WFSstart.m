@@ -1,80 +1,74 @@
+function [WFSdata, enabled] = WFSstart(LSsph)
+
+
 %=====================
 % WFS Initialization
 %=====================
 
-%*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
-%                         SPAT, ETSE, Universitat de València                *
-%                         46100, Burjassot, Valencia, Spain                  *
-%                                                                            *
-% This file is part of the SART3D: 3D Spatial Audio Rendering Toolbox.       *
-%                                                                            *
-% SART3D is free software:  you can redistribute it and/or modify it  under  *
-% the terms of the  GNU  General  Public  License  as published by the  Free *
-% Software Foundation, either version 3 of the License,  or (at your option) *
-% any later version.                                                         *
-%                                                                            *
-% SART3D is distributed in the hope that it will be useful, but WITHOUT ANY  *
-% WARRANTY;  without even the implied warranty of MERCHANTABILITY or FITNESS *
-% FOR A PARTICULAR PURPOSE.                                                  *
-% See the GNU General Public License for more details.                       *
-%                                                                            *
-% You should  have received a copy  of the GNU General Public License  along *
-% with this program.  If not, see <http://www.gnu.org/licenses/>.            *
-%                                                                            *
-% SART3D is a toolbox for real-time spatial audio prototyping that lets you  *
-% move in real time virtual audio sources from a set of WAV files using      *
-% multiple spatial audio rendering methods.                                  *
-%                                                                            *
-% https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
-%*****************************************************************************
+WFSdata.rNLS = [];
 
-% Check that SFS Toolbox is installed
-if isempty(which('SFS_start'));
-    h = msgbox('SFS Toolbox not found. Please, install it and add it to path.' ...
-            ,'WFS Rendering','custom',imread('spaticon.png'));
-        return;
-end
+WFSdata.L = 128;
 
-h = msgbox('Be sure that you are using a circular loudspeaker array. If not, please edit accordingly WFSstart.m' ...
-            ,'WFS Rendering','custom',imread('spaticon.png'));
+% Minimum loudspeaker distance
+WFSdata.rmin = min(LSsph(1,:));
 
-conf.nCoeffs = 128;
 
 % ==============================================
 % Use SFS-Toolbox format and functions
 % ==============================================
 
+% Check that SFS Toolbox is installed
+if isempty(which('SFS_start'));
+    warning('WFS: SFS Toolbox not found. Please, install it and add it to path.');
+    enabled = 0;
+    return;
+end
+
+NLS = size(LSsph,2);
+LScar = gSph2Car(LSsph);
+
+% Check that setup corresponds to a circular array
+if range(LSsph(1,:))~=0 || range(LSsph(3,:))~=0 || range(diff(sort(wrapTo360(LSsph(2,:)))))
+    warning('WFS: The loudspeaker configuration does not match a circular array');
+    enabled = 0;
+    return;
+end
+
+    
+
 % Secondary source positions
-conf.sfs.x0 = zeros(conf.nLS,7);
-conf.sfs.x0(:,1:3) = conf.LS.car.';
+WFSdata.x0 = zeros(NLS,7);
+WFSdata.x0(:,1:3) = LScar';
 
 % Get direction of secondary sources
-for n1 = 1:conf.nLS
-    conf.sfs.x0(n1,4:6) = -conf.sfs.x0(n1,1:3)/norm(conf.sfs.x0(n1,1:3));
+for n1 = 1:NLS
+    WFSdata.x0(n1,4:6) = -WFSdata.x0(n1,1:3)/norm(WFSdata.x0(n1,1:3));
 end
 
 % Set weights
-conf.sfs.x0(:,7) = ones(conf.nLS,1);
+WFSdata.x0(:,7) = ones(NLS,1);
 
 % Sound Field Synthesis General Configuration
-conf.sfs.src = 'ps';                                % Source Type
-conf.sfs.usetapwin = 1;                             % Use tapping window
-conf.sfs.tapwinlen = 0.3;                           % Tap Winlength
-conf.sfs.secondary_sources.geometry = 'circle';     % Secondary Source Geometry
-conf.sfs.c = 343;                                   % Speed of sound
-conf.sfs.xref = [0 0 0];                            % Amplitude Compensation Reference Point
-conf.sfs.fs = conf.fs;                              % Sampling Frequency
-conf.sfs.dimension = '2.5D';                        % Rendering dimension
-conf.sfs.driving_functions = 'default';             % Driving function
-conf.sfs.N = conf.nCoeffs;                          % IR length
-conf.sfs.secondary_sources.center = [0 0 0];        % Center of geometry
-conf.sfs.usefracdelay = 0;                          % Use fractional delay
+WFSdata.src = 'ps';                                % Source Type
+WFSdata.usetapwin = 1;                             % Use tapping window
+WFSdata.tapwinlen = 0.3;                           % Tap Winlength
+WFSdata.secondary_sources.geometry = 'circle';     % Secondary Source Geometry
+WFSdata.c = 343;                                   % Speed of sound
+WFSdata.xref = [0 0 0];                            % Amplitude Compensation Reference Point
+WFSdata.fs = 44100;                                % Sampling Frequency
+WFSdata.dimension = '2.5D';                        % Rendering dimension
+WFSdata.driving_functions = 'default';             % Driving function
+WFSdata.N = WFSdata.L;                             % IR length
+WFSdata.secondary_sources.center = [0 0 0];        % Center of geometry
+WFSdata.usefracdelay = 0;                          % Use fractional delay
 
 % WFS Parameters
-conf.sfs.wfs.usehpre = 0;
-conf.sfs.wfs.hpretype = 'FIR';
-conf.sfs.wfs.hpreflow = 50;
-conf.sfs.wfs.hprefhigh = 1200;
-conf.sfs.wfs.hpreBandwidth_in_Oct = 2;
-conf.sfs.wfs.hpreIIRorder = 4;
+WFSdata.wfs.usehpre = 0;
+WFSdata.wfs.hpretype = 'FIR';
+WFSdata.wfs.hpreflow = 50;
+WFSdata.wfs.hprefhigh = 1200;
+WFSdata.wfs.hpreBandwidth_in_Oct = 2;
+WFSdata.wfs.hpreIIRorder = 4;
+
+
+enabled = 1;

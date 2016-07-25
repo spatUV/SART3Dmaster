@@ -14,10 +14,9 @@ function sph = gCar2Sph(car)
 %   Example: [1; 45; 90].
 %
 % See also: gSph2Car.
-
-
+%
 %*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
+% Copyright (c) 2013-2016 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
 %                         46100, Burjassot, Valencia, Spain                  *
 %                                                                            *

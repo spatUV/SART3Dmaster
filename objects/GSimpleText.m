@@ -38,7 +38,7 @@ classdef GSimpleText < GUicontrol
             % bounds - Uicontrol dimension.
             
             % Call to SuperClass constructor:
-            obj = obj@GUicontrol(parent, 'text', string, tag, bounds);
+            obj = obj@GUicontrol(parent, 'text', string, tag, bounds, []);
         end
     end 
 end

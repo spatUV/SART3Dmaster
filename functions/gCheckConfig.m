@@ -1,15 +1,27 @@
-
-function conf = gCheckConfig(conf)
-%% GCHECKCONFIG - Check Initial Configuration Structure
+function [conf,scene,setup,method] = gCheckConfig(conf,scene,setup)
+%%GCHECKCONFIG - Check Initial Configuration Structures
 %
-%This function checks the main configuration structure created with
-%*gConfig* and adds extra information needed for the GUI.
+% This function checks the main configuration structure created with
+% *gConfig* and adds extra information needed for the GUI.
 %
-%See also: gConfig
+% Usage:
+%   [conf, scene, setup, method] = gCheckConfig(conf,scene,setup)
+%
+% Input parameters:
+%   conf  - SART3D configuration structure, as created by gConfig.
+%   scene - SART3D audio scene structure, as created by gConfig.
+%   setup - SART3D reproduction setup structure, as created by gConfig.
+%
+% Output parameters:
+%   conf  - SART3D configuration structure (verified).
+%   scene - SART3D configuration structure (verified).
+%   setup - SART3D configuration structure (verified).
+%
+% See also: gConfig 
 
 
 %*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
+% Copyright (c) 2013-2016 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
 %                         46100, Burjassot, Valencia, Spain                  *
 %                                                                            *
@@ -39,202 +51,124 @@ function conf = gCheckConfig(conf)
 % These lines check that the number of specified virtual source locations
 % agrees with the number of specified WAV files.
 
-if isequal(length(conf.VS.fileNames), length(conf.VS.coord)) == 0
+if isequal(size(scene.VSfilenames,2), size(scene.VScoord,2)) == 0
     error(['Error: The number of specified source locations does ' ...
         'not match the number of introduced source files.']);
 else
-    conf.nVS = length(conf.VS.fileNames);
+    scene.NVS = size(scene.VSfilenames,2);
 end
 
 %%
 % Force virtual source coordinate angles to be in the range -180 to 180.
-for ii = 1:conf.nVS
-    conf.VS.coord{ii} = [conf.VS.coord{ii}(1), ... 
-        wrapTo180(conf.VS.coord{ii}(2)), wrapTo180(conf.VS.coord{ii}(3))];
+for ii = 1:scene.NVS
+    scene.VScoord{ii} = [scene.VScoord{ii}(1), ... 
+        wrapTo180(scene.VScoord{ii}(2)), wrapTo180(scene.VScoord{ii}(3))];
 end
-
-
 
 %%
 % If the structure containing the virtual source names is empty, we set the
 % names from the original WAV files.
 
-if (isfield(conf.VS,'names')==0)
-    for ii = 1:conf.nVS
-        conf.VS.names{ii} = conf.VS.fileNames{ii}(1:length(conf.VS.fileNames{ii})-4);
+if (isfield(scene,'VSnames')==0  || isempty(scene.VSnames) )
+    for ii = 1:scene.NVS
+        scene.VSnames{ii} = scene.VSfilenames{ii}(1:length(scene.VSfilenames{ii})-4);
     end
+elseif (size(scene.VSnames,2)~= scene.NVS)
+    error(['Error: The number of provided source names does not match the number of sources']);
 end
+
 
 %%
 % Add dots for very long names:
 maxLengthName = 15; % Number of chars
-for ii = 1:conf.nVS
-    if (length(conf.VS.names{ii}) > maxLengthName)
-        conf.VS.names{ii} = ([conf.VS.names{ii}(1:maxLengthName-3), '...']);
+for ii = 1:scene.NVS
+    if (length(scene.VSnames{ii}) > maxLengthName)
+        scene.VSnames{ii} = ([scene.VSnames{ii}(1:maxLengthName-3), '...']);
     end    
 end
 
+%% Check loudspeaker positions and channelmapping:
 
-%% Loudspeaker Check
-% The number of loudspeakers is directly obtained from the number of
-% specified loudspeaker locations.
-conf.nLS = length(conf.LS.coord);
-
-%% 
+setup.NLS = size(setup.LScoord,2);
 % Force loudspeaker coordinate angles to be in the range -180 to 180.
-for ii = 1:conf.nLS
-    conf.LS.coord{ii} = [conf.LS.coord{ii}(1), ... 
-        wrapTo180(conf.LS.coord{ii}(2)), wrapTo180(conf.LS.coord{ii}(3))];
+for ii = 1:setup.NLS
+    setup.LScoord{ii} = [setup.LScoord{ii}(1), ... 
+    wrapTo180(setup.LScoord{ii}(2)), wrapTo180(setup.LScoord{ii}(3))];
+end
+setup.LSsph = cell2mat(setup.LScoord.').';
+setup.LScar = gSph2Car(setup.LSsph);
+
+% Check number of channels
+if length(setup.ChannelMapping)~= setup.NLS
+    error(['Error: The number of channels must match the number of specified loudspeaker locations']);
 end
 
-%%
-% Get coordinates both in spherical and Cartesian coordinates.
-% We use matrices instead of cell arrays.
-conf.LS.sph = reshape(cell2mat(conf.LS.coord),3,[]);
-conf.LS.car = gSph2Car(conf.LS.sph);
 
-%%
-% The minimum loudspeaker distance is stored as the minimum distance to the
-% listener (in order not to saturate the output audio under very small
-% distances when applying distance attenuation).
-conf.rMin = min(conf.LS.sph(1,:));  
-
-
-%% Check Sound Scene Dimensionality
+%% Check Sound Scene Dimensionality (Not currently used)
 % These lines check if all the virtual source locations are at zero
 % elevation when the scene dimensionality is '2D'.
 
-if strcmp(conf.sceneDim, '2D')  
-    aux = reshape(cell2mat(conf.VS.coord),3,[]);
-    if sum(aux(3,:))~=0
-        error(['Error: In a 2D scene, all the virtual sources must have '...
-               'zero elevation. Revise the configuration.']);
-    end
-    clear aux;
-end
+% if strcmp(conf.sceneDim, '2D')  
+%     aux = reshape(cell2mat(scene.VScoord),3,[]);
+%     if sum(aux(3,:))~=0
+%         error(['Error: In a 2D scene, all the virtual sources must have '...
+%                'zero elevation. Revise the configuration.']);
+%     end
+%     clear aux;
+% end
 
-%% Check Reproduction Setup Dimensionality
+%% Check Reproduction Setup Dimensionality (Not currently used)
 % Check that loudspeakers are all at the same height if 2D reproduction
 
-if strcmp(conf.setupDim, '2D')
-    aux = reshape(cell2mat(conf.LS.coord),3,[]);
-    if sum(aux(3,:))~=0
-        error(['Error: In a 2D setup, all the loudspeakers must have '...
-               'zero elevation. Revise the configuration.']);
-    end
-    clear aux;
-end
+% if strcmp(conf.setupDim, '2D')
+%     if sum(setup.LSsph(3,:))~=0
+%         error(['Error: In a 2D setup, all the loudspeakers must have '...
+%                'zero elevation. Revise the configuration.']);
+%     end
+% end
 
-%% Check DSP Audio Driver
-% The audio driver info is obtained as follows:
 
-%%
-% Device Names:
-info = dspAudioDeviceInfo;
-
-%%
-% Load device names into configuration structure
-if isfield(conf.driver,'deviceNames')==0
-conf.driver.deviceNames = {length(info)};
-for ii = 1:length(info)
-    conf.driver.deviceNames{ii} = info(ii).name(1:length(info(ii).name)-7); % Eliminate 7 char: ' (ASIO)'
-end
-end
-
-%% Check loudspeaker distance
+%% Check loudspeaker distance (Not currently used)
 % Check that loudspeakers are at the same distance from listening position
 % (Note: This is only required for some reproduction methods)
 
-% If the range of values in the radius of the coordinates is not zero
-if range(cellfun(@(x) x(1), conf.LS.coord)) ~= 0
-    warning('Loudspeakers are not at the same distance.');
+% % If the range of values in the radius of the coordinates is not zero
+% if range(cellfun(@(x) x(1), setup.LScoord)) ~= 0
+%     warning('Loudspeakers are not at the same distance.');
+% end
+
+%% Check subwoofer
+if strcmp(conf.subwoofer.active,'on')
+    if (isfield(setup,'subwchannel')==0) || isempty(setup.subwchannel) 
+        error('Subwoofer channel not specified in setup.')
+    end
 end
 
-%% Initial Configuration Plot
-% A separate figure from the GUI is generated to let the user check that
-% its setup is correct, having the ability to rotate the axes and explore
-% the initial configuration from different views.
+%% Check Reproduction Setup and Method
 
-figure
-% Loudspeakers
-plot3(conf.LS.car(1,:),conf.LS.car(2,:),conf.LS.car(3,:),'sq',...
-    'MarkerSize',10,'MarkerFaceColor','black','MarkerEdgeColor',...
-    'blue');
-hold on;
-% Head
-plot3(0,0,0,'or','MarkerSize',20,'MarkerFaceColor','r');
-% Ears
-plot3(0,0.14,0,'ok','MarkerSize',3,'MarkerFaceColor','r');
-plot3(0.14,0,0,'ok','MarkerSize',6);
-% Nose
-plot3(-0.14,0,0,'ok','MarkerSize',6);
-% Virtual Sources
-vscoor = reshape(cell2mat(conf.VS.coord),3,[]);
-vscoor = gSph2Car(vscoor);
-plot3(vscoor(1,:),vscoor(2,:),vscoor(3,:),'o',...
-    'MarkerSize',10,'MarkerFaceColor','green','MarkerEdgeColor',...
-    'black');
-axis([-3,3,-3,3,-3,3]), grid on;
-xlabel('x [m]'), ylabel('y [m]'), zlabel('z [z]');
-title('Initial Configuration Set-Up');
+% ========================================================================
+% RENDERING METHOD INITIALIZATION
+% IMPORTANT: Edit "methodInit.m" to define initialization routines for new
+% reproduction methods.
+% ========================================================================
 
-
-%% Rendering method Initialization
-% Each rendering method needs to call its initialization routine.
-% Every rendering method must first initialize the variable 'conf.nCoeffs',
-% that specifies the number of filtering coefficients needed when
-% performing the synthesis. For amplitude panning methods, conf.nCoeffs =
-% 1, but other methods may require a longer impulse response.
-
-switch conf.methods.selected
-    case 'VBAP' % VBAP
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------
-        VBAPstart;
-            
-    case 'AAP' % AAP
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------
-        AAPstart;
-
-    case 'HRTF' % HRTF
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------      
-       HRTFstart;
-            
-    case 'StTL' % StTL - STEREO TANGENT LAW
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------          
-        StTLstart;
-     
-    case 'StSL' % StSL - STEREO SINE LAW
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------       
-        StSLstart;
-             
-    case 'WFS' % WFS - Wave Field Synthesis
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------
-        WFSstart;
-        
-    case 'NFCHOA' % NFCHOA - Near Field Compensated Higher Order Ambisonics
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------
-        NFCHOAstart;
-        
-    otherwise
-        h = msgbox('Reproduction method not found' ...
-            ,'Error','custom',imread('spaticon.png'));
-        error('The selected reproduction method has not been defined.');
+% Initialize rendering method objects
+Nmethods = size(conf.methods,1);
+method = cell(Nmethods,1);
+for n = 1:Nmethods
+    method{n} = RMethod(conf.methods{n},setup.LSsph);
 end
 
+% Remove non-enabled methods
+enabledmethods = cellfun(@(x) x.enabled, method);
+method(enabledmethods==0) = [];
+conf.methods(enabledmethods==0) = [];
 
+selmethod = findcellstr(conf.methods,setup.Renderer);
+if isempty(selmethod)
+    setup.Renderer = conf.methods{1};
+else
+    setup.Renderer = conf.methods{selmethod};
+end
 
 end

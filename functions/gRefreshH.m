@@ -1,22 +1,18 @@
-function gRefreshH(hObject, ii)
-%GREFRESHH Updates the filter corresponding to a selected source.
+function [H,I] = gRefreshH(VS)
+%%GREFRESHH calculates the filtering coefficients and active loudspeakers
+%%for a given source VS
 %
-% This function is very important, since it is the one that calls a specific
-% rendering method and obtains the filter coefficients and contributing
-% loudspeakers for achieving the rendering of a virtual source.
+% Input paramteres:
+%   VS -  Virtual source object.
 %
-% The function is called initially by SART3D and is modified whenever a 
-% virtual source is moving (called by gDnD).
+% Output parameter:
+%   H  -  Matrix of filters [L x length(I)].
+%   I  -  Vector of indices corresponding to active loudspeakers.
 %
-% The input parameters are:
-%   hObject - Handle of the GUI to load the corresponding data.
-%
-%   ii - Index of the source that is being updated.
-%
-% See also: gDnD, SART3D
+% See also: Vsource, RMethod 
 
 %*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
+% Copyright (c) 2013-2016 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
 %                         46100, Burjassot, Valencia, Spain                  *
 %                                                                            *
@@ -42,77 +38,27 @@ function gRefreshH(hObject, ii)
 % https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
 %*****************************************************************************
 
-global conf handles
+coord = getCoord(VS);
 
-% Load data from GUI
-data = guidata(hObject);
-
-%*************************************************************************
-% CALL TO RENDERING METHOD
-%*************************************************************************
-% Methods should return a matrix H [nCoeffs x length(I)] with
-% the filtering coefficients for each of the loudspeakers contributing
-% to the rendering and specified in vector I.
-switch conf.methods.names{get(handles.pmMethod, 'Value')}
-    case 'VBAP'
-        pc = gSph2Car(data.vSSph(:,ii));
-        [H, I] = gVBAP(pc, data.vSSph(1,ii));
-       
+switch VS.method.type
     case 'HRTF'
-        [H, I] = gHRTF(data.vSSph(:,ii));
-        
+        [H, I] = gHRTF(coord,VS.method.data);
+    case 'VBAP'
+        [H, I] = gVBAP(coord,VS.method.data);
     case 'AAP'
-        [H, I] = gAAP(data.vSSph(2,ii));
-        
-    case 'StTL'
-        [H,I] = gStTL(data.vSSph(:,ii));
-    
+        [H, I] = gAAP(coord(2),VS.method.data);
     case 'StSL'
-        [H,I] = gStSL(data.vSSph(:,ii));
-    
+        [H, I] = gStSL(coord,VS.method.data);
+    case 'StTL'
+        [H, I] = gStTL(coord,VS.method.data);
     case 'WFS'
-        [H,I] = gWFS(data.vSSph(:,ii));
-    
+        [H, I] = gWFS(coord,VS.method.data);
     case 'NFCHOA'
-        [H,I] = gNFCHOA(data.vSSph(:,ii));
-    % INCLUDE HERE MORE CASES FOR NEW RENDERING METHODS!    
+        [H, I] = gNFCHOA(coord,VS.method.data);
+    case 'CLOSEST'
+       [H, I] = gCLOSEST(coord,VS.method.data);
     otherwise
-    h = msgbox('Reproduction method not found' ...
-            ,'Error','custom',imread('spaticon.png'));
-    error('The selected reproduction method has not been defined.');
+        error('Refreshing function not defined for method %s',VS.method.type);
+        return;
 end
-
-if isempty(I)
-    setfigptr('forbidden');
-else
-    setfigptr('closedhand');
-end
-
-% Loudspeakers that will change their rendering
-data.I(ii,I) = 1;
-Ichange = find(data.I(ii,:)==1);
-% Set active loudspeakers for source ii
-data.I(ii,:) = 0;
-data.I(ii,I) = 1;
-
-% Update filter matrix
-data.H(ii,:,:) = zeros(1,conf.nLS,conf.nCoeffs);
-if isempty(I)==0
-data.H(ii,I,:) = reshape(H.',1,length(I),conf.nCoeffs);
-end
-
-% Update filtering for each of the changing loudspeakers
-for jj = 1:length(Ichange)
-    % When objects are created for the first time
-    if isempty(data.Ho{ii,Ichange(jj)})        
-        data.Ho{ii,Ichange(jj)} = GfftFIRm(conf.SamplesPerFrame,squeeze(data.H(ii,Ichange(jj),:)));
-    end
-    UpdateFilter(data.Ho{ii,Ichange(jj)},squeeze(data.H(ii,Ichange(jj),:)));
-end
-
-% Save GUI data
-guidata(hObject, data); 
-
-
-
-end
+       

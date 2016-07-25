@@ -52,7 +52,7 @@ classdef GImage < GUicontrol
             bounds = [x, y, w, h];
             
             % SuperClass constructor:
-            obj = obj@GUicontrol(parent, 'pushbutton', '', tag, bounds);
+            obj = obj@GUicontrol(parent, 'pushbutton', '', tag, bounds, []);
 
             % Place image:
             setImage(obj, image);

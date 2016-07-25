@@ -34,7 +34,7 @@ classdef GUicontrol < hgsetget
     end
     
     methods
-        function obj = GUicontrol(parent, style, string, tag, bounds)
+        function obj = GUicontrol(parent, style, string, tag, bounds, value)
             % Constructor.
             % parent - Parent figure.
             % style - Uicontrol type.
@@ -48,6 +48,7 @@ classdef GUicontrol < hgsetget
             'String', string,...
             'Tag', tag,...
             'Position', bounds,...
+            'Value', value,...
             'Callback', @obj.callback);
             
             % Get sure that the object is deleted if the uicontrol is

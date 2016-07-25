@@ -1,3 +1,0 @@
-0.1.0 (29 September 2015)
-
-First public release (under the GPLv3+ license)

@@ -1,44 +1,37 @@
+function [AAPdata, enabled] = AAPstart(LSsph)
+
 %=====================
 % AAP Initialization
 %=====================
 
-%*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
-%                         SPAT, ETSE, Universitat de València                *
-%                         46100, Burjassot, Valencia, Spain                  *
-%                                                                            *
-% This file is part of the SART3D: 3D Spatial Audio Rendering Toolbox.       *
-%                                                                            *
-% SART3D is free software:  you can redistribute it and/or modify it  under  *
-% the terms of the  GNU  General  Public  License  as published by the  Free *
-% Software Foundation, either version 3 of the License,  or (at your option) *
-% any later version.                                                         *
-%                                                                            *
-% SART3D is distributed in the hope that it will be useful, but WITHOUT ANY  *
-% WARRANTY;  without even the implied warranty of MERCHANTABILITY or FITNESS *
-% FOR A PARTICULAR PURPOSE.                                                  *
-% See the GNU General Public License for more details.                       *
-%                                                                            *
-% You should  have received a copy  of the GNU General Public License  along *
-% with this program.  If not, see <http://www.gnu.org/licenses/>.            *
-%                                                                            *
-% SART3D is a toolbox for real-time spatial audio prototyping that lets you  *
-% move in real time virtual audio sources from a set of WAV files using      *
-% multiple spatial audio rendering methods.                                  *
-%                                                                            *
-% https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
-%*****************************************************************************
-
 % Note: Please, be sure to use a circular reproduction setup.
-h = msgbox('Be sure that you are using a circular loudspeaker array.' ...
-            ,'WFS Rendering','custom',imread('spaticon.png'));
+% h = msgbox('Be sure that you are using a circular loudspeaker array.' ...
+%             ,'WFS Rendering','custom',imread('spaticon.png'));
+
+AAPdata.rNLS = [];
 
 % Number of coefficients (just a gain)
-conf.nCoeffs = 1; 
+AAPdata.L = 1; 
+
+
+% Check that setup corresponds to a circular array
+if range(LSsph(1,:))~=0 || range(LSsph(3,:))~=0 || range(diff(sort(wrapTo360(LSsph(2,:)))))
+    warning('AAP: The loudspeaker configuration does not match a circular array')
+    enabled = 0;
+    return;
+end
 
 % Initialize order (default taken from the number of loudspeakers)
-if rem(conf.nLS,2)==1
-    conf.AAP.Order = (conf.nLS-1)/2;
+NLS = size(LSsph,2);
+if rem(NLS,2)==1
+    AAPdata.Order = (NLS-1)/2;
 else
-    conf.AAP.Order = conf.nLS/2;
+    AAPdata.Order = NLS/2;
 end
+
+AAPdata.LSsph = LSsph;
+
+enabled = 1;
+
+
+

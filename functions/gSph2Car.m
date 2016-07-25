@@ -15,9 +15,8 @@ function car = gSph2Car(sph)
 %
 % See also: gCar2Sph.
 
-
 %*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
+% Copyright (c) 2013-2016 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
 %                         46100, Burjassot, Valencia, Spain                  *
 %                                                                            *

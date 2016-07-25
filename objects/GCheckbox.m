@@ -41,7 +41,7 @@ classdef GCheckbox < GUicontrol
             % bounds - Uicontrol dimensions.
             
             % We call the superClass constructor:
-            obj = obj@GUicontrol(parent, 'checkbox', '', tag, bounds);            
+            obj = obj@GUicontrol(parent, 'checkbox', '', tag, bounds, 1);            
         end
     end
 end

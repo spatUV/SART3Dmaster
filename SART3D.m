@@ -1,23 +1,7 @@
-function [] = SART3D(config)
-%% SART3D - SPATIAL AUDIO RENDERING TOOLBOX - GUI
-%
-% This is the function that starts the GUI of the Spatial Audio
-% Rendering Toolbox.
-%
-% Usage:
-%   [] = SART3D([config])
-%   Example: SART3D('conf.mat')
-%
-% Input paramters:
-%   config (optional) - name of configuration data file
-%
-% Please, edit 'gConfig.m' to create a suitable configuration structure.
-%
-% See also: gConfig
-
+%% SART3D 3D Spatial Audio Rendering Toolbox
 
 %*****************************************************************************
-% Copyright (c) 2013-2015 Signal Processing and Acoustic Technology Group    *
+% Copyright (c) 2013-2016 Signal Processing and Acoustic Technology Group    *
 %                         SPAT, ETSE, Universitat de València                *
 %                         46100, Burjassot, Valencia, Spain                  *
 %                                                                            *
@@ -43,295 +27,158 @@ function [] = SART3D(config)
 % https://github.com/spatUV/SART3Dmaster                  maximo.cobos@uv.es *
 %*****************************************************************************
 
-%% Initialization
-% Toolbox initialization.
-
-%%
-% Clear global vars and clean screen:
 close all;
-clearvars -global;
+clear all;
 clc;
 
-%%
-% % Add folders to path:
-% addpath('images', genpath('audioscenes'), 'objects', 'setups',...
-%     'gui_elements', 'configurations', genpath('functions'));
+% Add folders to path if SART3D has not been initialized:
+clear all;
+SART3Dini;
 
 %%
-% Load configuration structure obtained by *gConfig.m*. You can select your
-% own MAT file containing the intended configuration structure.
-global conf;
-if nargin == 1
-    load(config,'conf');
-else
-    load('conf_def_st.mat','conf');
+% ========================================================================
+% CHECK CONFIGURATION
+% ========================================================================
+
+% Run configuration script
+gConfig;
+
+% Note: Alternatively, you can save in a .mat file the structures conf, 
+% scene and setup and load them here as needed.
+load twochannel.mat;
+
+% Also, you may want to load a configuration or a scene as a .mat file.
+load test_scene.mat;
+
+% Check configuration
+[conf, scene, setup, method] = gCheckConfig(conf, scene, setup);
+
+
+%%
+% ========================================================================
+% GUI INITIALIZATION
+% ========================================================================
+
+% Get GUI object dimension structure to construct the GUI
+guidim = gSizes();
+
+% Initialize main GUI and get handles
+data.f = GUIstart(guidim);
+
+% Initialize plan view GUI and get handles
+data.fplan = Planstart(conf,setup,guidim);
+% pixel to meter factor
+xyscale = guidim.bounds_axes_plan(3)/(2*conf.rmax); 
+
+% Initialize profile view GUI (if enabled)
+if strcmp(conf.profile,'on')
+    data.fprofile = Profilestart(conf,setup,guidim);
+    zyscale = guidim.bounds_axes_profile(3)/(2*conf.rmax);
 end
 
-%%
-% Initialize the data structure used by the GUI in guidata. Contains:
-%
-% * Data matrix with rendering filters (or coefficients) (1)
-% * Logical matrix indicating loudspeakers contributing to synthesis (2)
-% * Filtering objects (3)
-% * Indices of changing loudspeaker for each source (4)
-% * Inactive loudspeakers for each source (5)
-% * Virtual source coordinates managed by the GUI (6)
+% Create virtual source objects
+VS = cell(scene.NVS,1);
+for ii = 1:scene.NVS    
+    VS{ii} = VSource(ii,scene.VSnames{ii},scene.VScoord{ii},scene.VSfilenames{ii});
+end
 
-data.H = zeros(conf.nVS, conf.nLS, conf.nCoeffs); % (1)
-data.I = zeros(conf.nVS, conf.nLS); % (2)
-data.Ho = cell(conf.nVS, conf.nLS); % (3)  
-data.Ichange = cell(conf.nVS); % (4)
-data.Izeros = cell(conf.nVS); % (5)
-data.vSSph = reshape(cell2mat(conf.VS.coord),3,[]); % (6)
-
-%% Programmatic GUI construction
-% This section starts the code to build the GUI according to the
-% configuration structure.
-
-%%
-% Global variables needed to speed up processing.
-global handles v;
-
-%--- Get dimensions of components in GUI ---------------------------
-v = gSizes;
-
-%--- Create figure (not shown until all elements are load) ---------
-f = figure('Visible', 'on', 'Position', v.bounds,...
-    'Color', v.bgColor);
-
-%-- Window Title ---------------------------------------------------
-set(f, 'Name', 'SART-3D (3D Spatial Audio Rendering Toolbox)',...
-    'NumberTitle', 'off', 'MenuBar', 'none');
-
-set(f,'Renderer','painters');
-
-%-- Create Axes ----------------------------------------------------
-gDrawScene(v.bounds_axes_plan, 'plan');
-hold on;
-gDrawScene(v.bounds_axes_profile, 'profile');
-hold on;
-
-% We declare graphical data from GUI to start loading components
-handles = guihandles(f);
-
-%% === Component Placement ============================================
-
-% *********************************************************************
-% Script that places components in the GUI
-%run('mPlaceComp.m');
-mPlaceComp;
-% *********************************************************************
-
-% -- Logo -----------
-GImage(gcf, '', v.bounds_logo, 'logo_spat_uv.png');
-
-% Move GUI to top-right corner:
-movegui(f, 'northwest'); 
-
-% Make the GUI visible:
-set(f, 'Visible', 'on');
-
-% We load globally all the graphical objects that will be modified
-% through execution so that other functions do not need to load them.
-% This makes the program faster.
-
-handles = guihandles(f);
-
-%% == Calculate initial rendering coefficients and filter objects =====
-
-for ii = 1:conf.nVS
-    for jj = 1:conf.nLS
-        data.Ho{ii,jj} = GfftFIRm(conf.SamplesPerFrame,zeros(conf.nCoeffs,1));
+% Create text boxes for user interaction
+for ii = scene.NVS:-1:1
+    
+    % Edit-box indicating the virtual source to interact with user:
+    aux = GVS(data.fplan, num2str(ii),...
+        'textsVS', guidim.bounds_text_vs, ii, scene.VScoord{ii}, 'plan');
+    
+    % Box is included as a property of virtual source object
+    createBox(VS{ii}, aux, 'plan', xyscale);
+    
+    % (same for profile view)
+    if strcmp(conf.profile,'on')
+        aux = GVS(data.fprofile, num2str(ii),...
+        'textsVSProfile', guidim.bounds_text_vs, ii, scene.VScoord{ii}, 'profile');    
+        createBox(VS{ii}, aux, 'profile', zyscale);
     end
+    
+    % Update position of virtual source
+    updatePos(VS{ii}, scene.VScoord{ii});    
 end
 
-guidata(f,data);
+% Create GUI components
+Compstart(data.f,conf,setup,guidim, method, VS);
 
-for ii = 1:conf.nVS
-    gRefreshH(f, ii);
+%%
+% ========================================================================
+% DRAG & DROP INITIALIZATION
+% ========================================================================
+
+% Drag and drop data structure
+datahit.handles = guihandles(data.f);
+datahit.handles_plan = guihandles(data.fplan);
+datahit.LScar = setup.LScar;
+datahit.sres = conf.sres;
+datahit.lastp = [0;0;0];
+datahit.boundsaxesplan = guidim.bounds_axes_plan;
+if strcmp(conf.profile,'on')
+    datahit.handles_profile = guihandles(data.fprofile);
+    datahit.boundsaxesprofile = guidim.bounds_axes_profile;
+    datahit.profileon = 1;
+else
+    datahit.profileon = 0;
 end
-data = guidata(f);
 
-
-%% === Initialize Drag & Drop== =======================================
-
-% Store virtual source (objects) positions in plan and profile view
-data.VSxy = zeros(2, conf.nVS);
-data.VSyz = zeros(2, conf.nVS);
-for ii = 1:conf.nVS
-     VSaux = get(handles.textsVS(ii), 'Position').'; % Plan x-y
-     data.VSxy(1,ii) = VSaux(1) + VSaux(3)/2;
-     data.VSxy(2,ii) = VSaux(2) + VSaux(4)/2;
-     VSaux = get(handles.textsVSProfile(ii), 'Position').'; % Profile y-z
-     data.VSyz(1,ii) = VSaux(1) + VSaux(3)/2;
-     data.VSyz(2,ii) = VSaux(2) + VSaux(4)/2;
-end
-
-% Used for positioning when using spatial resolution
-global lastp
-lastp = [0;0;0];
-
-% Save changes in guidata:
-guidata(f, data);
 
 % Relate mouse motion to Drag And Drop custom function:
-set(f, 'WindowButtonMotionFcn', @gDnD);
-
-
-%% === Audio Objects ===================================================
-% Initialize DSP System Input Audio Objects
-data.in = {conf.nVS};
-for ii = 1:conf.nVS
-    data.in{ii} = dsp.AudioFileReader;
-    data.in{ii}.Filename = conf.VS.fileNames{ii};
-    data.in{ii}.SamplesPerFrame = conf.SamplesPerFrame;
-    data.in{ii}.PlayCount = inf;
-end
-guidata(f, data);
-
-
+set(data.fplan, 'WindowButtonMotionFcn', @(hobj,eventdata) gDnDplan(hobj, eventdata, datahit, VS));
+if strcmp(conf.profile,'on')
+   set(data.fprofile, 'WindowButtonMotionFcn', @(hobj,eventdata) gDnDprofile(hobj, eventdata, datahit, VS));
 end
 
 
-% ============= MAIN PLAYBACK FUNCTION ================================
-function tbPlayOnCallback(hObject, ~)
-    global handles conf
+%% 
+% ========================================================================
+% AUDIO FILTERING OBJECTS INITIALIZATION
+% ========================================================================
 
-%% === Initialize Repproduction =======================================
-    % Load GUI data
-    data = guidata(hObject);
+for ii = 1:scene.NVS
+    % By default, all sources are rendered using the setup method
+    selmethod = findcellstr(conf.methods,setup.Renderer);
+    setMethod(VS{ii}, method{selmethod});
     
-    % Initialize output object
-    out = dsp.AudioPlayer;
+    % Create filter objects for each source
+    createRenderer(VS{ii}, conf.SamplesPerFrame, setup.NLS);
     
-    % Selected reproduction device from popupMenu:
-    deviceNames = get(handles.pmDevice, 'String');
-    deviceNameSelected = deviceNames(get(handles.pmDevice, 'Value'));
-    auxchar = char(deviceNameSelected);
-    out.DeviceName = auxchar;    
-    
-    % Set reproduction parameters:
-    %out.SampleRate = data.in{1}.SampleRate;
-    out.SampleRate = conf.fs;
-    out.BufferSizeSource = 'Property';
-    
-    bufferSize = get(handles.pmBufferSize, 'String');
-    bufferSizeSelected = bufferSize(get(handles.pmBufferSize, 'Value'));   
-    out.BufferSize = str2double(bufferSizeSelected);
-    
-    out.ChannelMappingSource = 'Property';
-    out.ChannelMapping = conf.driver.ChannelMapping;
-    out.QueueDuration = conf.QueueDuration;
-    
-    % Initialize output data:
-    voidChannels = zeros(conf.SamplesPerFrame, conf.nLS);
-    
-    % Initialize required output data for smoothing:
-    y  = voidChannels;
-    y1 = voidChannels;
-    y2 = voidChannels;
-    
-    % Initialize input data:
-    x = zeros(conf.SamplesPerFrame,conf.nVS);
-    
-    % Total audio out (will accumulate signals from different sources)   
-    audio_out = voidChannels;
-    
-    % Auxiliar vector storing last-frame contributing loudspeakers
-    Ilast = cell(conf.nVS);
-    
-    % linear fade-in/out
-    %fadeOutMono = linspace(1, 0, conf.SamplesPerFrame).'; % [SamplesPerFrame]
-    %fadeInMono  = linspace(0, 1, conf.SamplesPerFrame).';
-    
-    % hanning fade-in/out
-    auxhann = hann(2*conf.SamplesPerFrame,'periodic');
-    fadeInMono = auxhann(1:conf.SamplesPerFrame);
-    fadeOutMono = auxhann(conf.SamplesPerFrame+1:end);
-    
-    fadeOut = repmat(fadeOutMono, 1, conf.nLS); % [SamplesPerFrame x nLS]
-    fadeIn = repmat(fadeInMono, 1, conf.nLS);
-    
-    %% === While play button is on ====================================
-    
-    while get(hObject, 'State') % 'On' by default
-        % Load data from GUI (needed to get updated filters)       
-        data = guidata(hObject);
-
-        % If play button is pressed again, break
-        if strcmp(get(hObject, 'State'), 'off')
-            break;
-        end
-                
-        for ii = 1:conf.nVS
-            % Read audio files:
-            x(:,ii) = step(data.in{ii});
-            
-            y1 = voidChannels;
-            y2 = voidChannels;
-            
-            % Play audio from sources with active checkbox. If not, mute by
-            % adding zeros. This is necessary for having synchronized
-            % sources
-            if get(handles.checkboxesVS(ii), 'Value')
-                
-                % Cross-fading
-                if strcmp(conf.fadeBuffers, 'on')
-                    
-                    % Get each loudspeaker signal:   
-                    % This works ok, but is computationally more expensive
-                    % for jj = 1:conf.nLS
-                    %    y1(:, jj) = steplast(data.Ho{ii,jj},x(:,ii));
-                    %    y2(:, jj) = step(data.Ho{ii,jj},x(:,ii));
-                    % end
-                
-                    y1 = voidChannels;
-                    y2 = voidChannels;
-                    Ip = find(data.I(ii,:)~=0);
-                    I = unique([Ip,Ilast{ii}]);
-                    for jj = 1:length(I)
-                        y1(:, I(jj)) = steplast(data.Ho{ii,I(jj)},x(:,ii));
-                        y2(:, I(jj)) = step(data.Ho{ii,I(jj)},x(:,ii));
-                    end
-                    Ilast{ii} = Ip;
-                    
-                    % Apply cross-fading:
-                    y = y1.*fadeOut+y2.*fadeIn; % Mix fade-in and fade-out signal
-                    
-                else % No frame smoothing
-                    y = voidChannels;
-                    Ip = find(data.I(ii,:)~=0);
-                    for jj = 1:length(Ip)
-                       y(:, Ip(jj)) = step(data.Ho{ii,Ip(jj)},x(:,ii));
-                    end
-                end 
-                
-                guidata(gcf,data);
-            else
-                y = voidChannels; % Mute
-            end
-            % Accumulate audio from different sources
-            audio_out = audio_out + y;                       
-           
-         end
-
-         step(out, audio_out); % Reproduce audio stream
-         
-         % Reset audio stream for next callback.
-         audio_out = voidChannels;        
-         drawnow;
-    end
-    
-%     % Release resources:
-%     for ii = 1:conf.nVS
-%         release(data.in{ii});
-%     end
-%     release(out);
-    
+    % Update filters
+    updateRenderer(VS{ii});   
 end
 
-function tbPlayOffCallback(hObject, ~)
-    % Exit from tbPlayOffCallback()'s "while"
-    set(hObject, 'State', 'off');
+
+%% 
+% ========================================================================
+% AUDIO PLAYBACK
+% ========================================================================
+
+% Playback data structure
+playback.handles = guihandles(data.f);
+playback.fs = conf.fs;
+playback.buffersize = conf.bufferSize;
+playback.channelmapping =  setup.ChannelMapping;
+playback.queue = conf.QueueDuration;
+playback.NLS = setup.NLS;
+playback.samplesperframe = conf.SamplesPerFrame;
+playback.NVS = scene.NVS;
+playback.fadebuffers = conf.fadeBuffers;
+if strcmp(conf.subwoofer.active, 'on')
+    playback.subwactive = 1;
+    playback.subwchannel = setup.subwchannel;
+else
+    playback.subwactive = 0;
 end
 
+% Playback toolbar
+toolBar = uitoolbar(data.f); 
+% ToggleButton - play 
+uitoggletool('Parent', toolBar,...
+    'CData', imread('play.png'),...
+    'OnCallback', @(hobj,eventdata) tbPlayOnCallback(hobj, eventdata, playback, VS),...
+    'OffCallback', @tbPlayOffCallback,...
+    'TooltipString', 'Press to start/stop playback');

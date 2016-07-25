@@ -23,6 +23,7 @@ Requirements
 * **DSP System Toolbox** (Mathworks)
 * **Sound Field Synthesis Toolbox** (optional, for reproducing sound field synthesis methods. Get it [here](https://github.com/sfstoolbox/sfs).)
 * **Audio hardware with ASIO drivers**. If your soundcard does not have specific ASIO drivers, you can install generic [ASIO4ALL v2](http://www.asio4all.com/) drivers.
+* **Core Audio drivers** for Mac users.
 
 
 What can I do with SART3D?
@@ -30,8 +31,8 @@ What can I do with SART3D?
 
 SART3D lets you move in real time virtual audio sources from a set of WAV files using multiple spatial audio rendering methods. You can specify locations of virtual sources and loudspeakers and change among the different available rendering methods.
 
-The programmatic structure of the GUI lets the user experience with any loudspeaker setup specified in the configuration structure.
-The modular design of the Toolbox lets the user create new rendering methods and experiment with different parameters. As a result, SART3D is a very useful tool for spatial audio research and education.
+The programmatic structure of the GUI lets the user experience with any loudspeaker setup specified in the configuration structures.
+The modular design of the Toolbox lets the user create new rendering methods and experiment with different parameters. SART3D is therefore designed to be a very useful tool for spatial audio research and education.
 
 Which spatial audio rendering methods are supported?
 -----------------------------------------------------------------
@@ -50,9 +51,9 @@ Currently, the toolbox incorporates:
 How do I give it a quick try?
 ---------------------------------
 
-To start playing with SART3D, just be sure to have an available ASIO driver in your system.
+To start playing with SART3D, just be sure to have an available ASIO driver in your system (PC) or Core Audio (Mac).
 
-*Step 1:* First, go to Matlab’s Preferences and set DSP System Toolbox Audio API to ASIO.
+*Step 1:* First, go to Matlab’s Preferences and set DSP System Toolbox Audio API to ASIO (or Core Audio).
 
 ![Image](doc/img/ASIO.png)
 
@@ -62,11 +63,12 @@ To start playing with SART3D, just be sure to have an available ASIO driver in y
 SART3Dini;
 SART3D
 ```
-This will add the folder structure into Matlab’s path and will run the main GUI. The toolbox is configured to load automatically a default two-loudspeaker set-up.
+
+This will add the folder structure into Matlab’s path and will run the main GUI (including two figure windows, one for plan view and another for profile view). The toolbox is configured to load automatically a default two-loudspeaker set-up.
 
 ![Image](doc/img/default.png)
 
-*Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the ASIO buffer size and the rendering method.
+*Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the desired rendering method. The displayed rendering methods are only the ones compatible with the specified loudspeaker setup. For example, WFS will not be available with the default two-loudspeaker setup. If you want to know how to change the setup go the next section.
 
 ![Image](doc/img/driver.png)
 
@@ -74,7 +76,7 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 ![Image](doc/img/sources.png)
 
-Check the **Active loudspeakers" checkbox "You can see which are the active loudspeakers contributing to the rendering of a given sound source when you are moving it. For example, when using WFS with a circular loudspeaker setup you will see something like this. Note that graphics operations slow down the performance, so it is recommended to uncheck this option if you have moderate computational resources.
+If you check the **Active loudspeakers** checkbox, you can see which are the active loudspeakers contributing to the rendering of a given sound source when you are moving it. For example, when using WFS with a circular loudspeaker setup you will see something like this. Note that graphics operations slow down the performance, so it is recommended to uncheck this option if you have moderate computational resources.
 
 ![Image](doc/img/activels.png) ![Image](doc/img/activeaxes.png) 
 
@@ -83,13 +85,17 @@ How can I change the setup?
 
 First, put your WAV files in a folder within the /audioscenes directory.
 
-The script <code>‘gConfig.m’</code> lets the user create a valid configuration structure. Please, navigate throughout the script to create a configuration fitting your needs. You can also open the <code>‘gConfig.html’ </code> page to see a published version of the script.
+The script <code>‘gConfig.m’</code> lets the user create a valid configuration structure. Please, navigate throughout the script to create a configuration fitting your needs.
 
-Once you have modified and run ‘gConfig’ according to the desired configuration, a new <code>‘conf.mat’</code> file will be in the /configurations directory. Then, you can specify this new configuration in SART3D:
+Running the <code>‘gConfig.m’</code> script results in three structures:
 
-```Matlab
-SART3D('conf.mat');
-```
+* **conf**: Matlab structure with general configuration parameters.
+* **scene**: Matlab structure with sound scene info (source locations, files, names...)
+* **setup**: Matlab structure with loudspeaker configuration (loudspeaker positions, channel mapping...)
+
+The above structures are needed by SART3D to build the programmatic GUI. Note that once you have defined a set of valid structures, you can directly save them in a .mat file and load them directly instead of running <code>‘gConfig.m’</code>.
+
+
 ### Can I see an example ?
 
 Yes, let’s create a 5 loudspeaker setup instead of the default stereo setup.
@@ -97,22 +103,20 @@ Go to <code>‘gConfig.m’</code> and specify the spherical coordinates of the 
 
 ```Matlab
 % *Loudspeaker Locations*:
-% Loudspeaker locations are defined in spherical coordinates. For example, 
-% for a two-loudspeaker (or headphones) set-up: 
 
-conf.LS.coord = {
+setup.LScoord  = {
     	[1.75, +30, 0],...
     	[1.75, 0, 0],...
-[1.75, -30, 0],...
-[1.75, -150, 0],...
-[1.75, +150, 0]};
+		[1.75, -30, 0],...
+		[1.75, -150, 0],...
+		[1.75, +150, 0]};
 ```
-Specify the correct audio channel mapping in your set-up, i.e. which audio channel in your audio interface corresponds to loudspeaker 1, which one to loudspeaker 2, etc. By default, loudspeaker 1 goes to audio channel 1, loudspeaker 2 to channel 2, etc. However you can specify the desired mapping as follows:
+Specify the correct audio channel mapping in your set-up, i.e. which audio channel in your audio interface corresponds to loudspeaker 1, which one to loudspeaker 2, etc. For example:
 
 ```Matlab
-conf.driver.ChannelMapping = [5 4 3 2 1].
+setup.ChannelMapping = [1 2 3 4 5].
 ```
-This would tell the software that loudspeaker one is driven by the output audio channel 5, loudspeaker 2 by audio channel 4 and so on.
+This would tell the software that loudspeaker one is driven by the output audio channel 1, loudspeaker 2 by audio channel 2 and so on.
 Save and run the <code>‘gConfig’</code> script to overwrite the <code>‘conf.mat’</code> file. Now, run again SART3D specifying the new configuration:
 
 ```Matlab
@@ -124,82 +128,78 @@ SART3D('conf.mat');
 How do I create a new rendering method?
 ---------------------------------
 
-To create a new rendering method, you have to modify some of the functions in SART3D. 
+To create a new rendering method, you have to modify some of the functions in SART3D, but the process is quite easy. 
 Let us create a toy example that consists in selecting the closest loudspeaker to the virtual source. Let’s call it **CLOSEST**.
 
-First, create a folder for the method in the /algorithms directory:
+First, create a folder for the method in the /functions/algorithms directory:
 
 ![Image](doc/img/folders.png)
 
-Now edit <code>‘gCheckConfig.m’</code> to let the GUI know how to initialize the method. In the **‘Rendering Method Initialization’** section , enter a new case for the method within the <code>switch conf.methods.selected statement</code>:
+Now edit <code>‘methodInit.m’</code> to let the GUI know how to initialize the method. Enter a new case for the method within the <code>switch method</code>:
 
 ```Matlab
-case 'CLOSEST' % CLOSEST
-        % ----------------------------------------------------------------
-        % Initialization routine
-        % ----------------------------------------------------------------
-        CLOSESTstart;
+    case 'CLOSEST'
+        [methoddata,enabled] = CLOSESTstart(LSsph);
 ```
 
-Create the initialization script <code>‘CLOSESTstart.m’</code> in the CLOSEST folder. In this case, the initialization script just specifies that the rendering filter is just a gain (one scalar coefficient):
+Create the function <code>‘CLOSESTstart.m’</code> in the CLOSEST folder. Note that de function must return two elements:
+
+* **methoddata**: This is a tructure containing all the data needed later by the rendering method. Besides the specific data corresponding to the method, all methods are required to specify the following fields within methoddata:
+	* rNLS: Required number of loudspeakers in the method (if there is any requirement).
+	* L: Length of the rendering filters.
+* **enabled**: This is a variable that is set to 1 or 0 depending on the availability of the method. 
+
+Note that most initialization routines need the matrix LSsph as an input. This matrix specifies the spherical coordinates of the loudspeakers. The initialization routine of the method usually checks if the current loudspeaker setup corresponds to a valid configuration for the method, returning 0 if the loudspeaker configuration is not suitable for the rendering method.
+
+
+In this toy example, the initialization script just specifies that the rendering filter is just a gain (one scalar coefficient):
 
 ```Matlab
-% Number of coefficients (just a gain)
-conf.nCoeffs = 1;
- 
-% Add all the necessary parameters of the method in the conf structure (in this case, there are not any).
-conf.CLOSEST = '';
+function [CLOSESTdata, enabled] = CLOSESTstart(LSsph)
+
+%=========================================
+% CLOSEST Initialization
+%=========================================
+
+CLOSESTdata.rNLS = [];	% There is not a required number of loudspeakers
+
+CLOSESTdata.L = 1;
+
+enabled = 1;
+
+% We save loudspeaker locations as accesible data to the method.
+CLOSESTdata.LScar = gSph2Car(LSsph);
+
+% The minimum loudspeaker distance will be used to normalize the gain of the rendering coefficients (to avoid saturation when the sources are very close to the listener)
+CLOSESTdata.rmin = min(LSsph(1,:));
 ```
 
-Now, we have to specify the function that calculates the filter coefficients and selects the contributing loudspeakers in our new method. We call it <code>‘gCLOSEST.m’</code>:
+Now, we have to specify the function that calculates the filter coefficients and selects the contributing loudspeakers in our new method. Every rendering method must return a matrix H and a vector I. The vector I stores the indices of loudspeakers contributing to the rendering of a source at a given position. The matrix H is matrix with L rows and as many columns as the length of I, specifying the corresponding rendering filters. 
+
+Let's define a rendering function for gCLOSEST, we will call it <code>‘gCLOSEST.m’</code>. We will need as an input for calculating the rendering function both the spherical coordinates of the source (sph) and the method data structure that we defined in the initialization function (called here CLOSESTdata)
 
 ```Matlab
-function [H,I] = gCLOSEST(sph)
-%GCLOSEST Example of Algorithm. Selects the closest loudspeaker for the
-%rendering.
-%
-% Usage:
-%   [H,I] = gCLOSEST(sph)
-%
-% Input parameters:
-%   sph - Spherical coordinates of the virtual source [r,Az,El].
-%
-% Output paramters:
-%   H - Gain of the selected loudspeaker.
-%   I - Selected loudspeaker.
-%
-% See also: StSLstart, gStTL
- 
-global conf;
- 
-car = gSph2Car(sph);	%spherical to Cartesian coordinates
- 
+function [H,I] = gCLOSEST(sph, CLOSESTdata)
+
+sph = sph(:);
+car = gSph2Car(sph);    %spherical to Cartesian coordinates
+
 % Calculate distance to each loudspeaker
-dist = sqrt((conf.LS.car(1,:)-car(1)).^2 + (conf.LS.car(2,:)-car(2)).^2 + (conf.LS.car(3,:)-car(3)).^2);
+dist = sqrt((CLOSESTdata.LScar(1,:)-car(1)).^2 + (CLOSESTdata.LScar(2,:)-car(2)).^2 + (CLOSESTdata.LScar(3,:)-car(3)).^2);
 
 % Find minimum 
 [d,I] = min(dist);
- 
+
 % Apply distance attenuation factor
-r = max(d, conf.rMin);
-H = conf.rMin/r;
+r = max(d, CLOSESTdata.rmin);
+H = CLOSESTdata.rmin/r;
 ```
 
-We save also the above rendering function in /algorithms/CLOSEST. Then, we include in the filter updating function <code>‘gRefreshH.m’</code> the new case within the <code>switch conf.methods.selected statement</code>:
+Finally, we let the general filter updating function <code>‘gRefreshH.m’</code> know the rendering function we have just created:
 
 ```Matlab
-% INCLUDE HERE MORE CASES FOR NEW RENDERING METHODS!    
     case 'CLOSEST'
-        [H,I] = gCLOSEST(data.vSSph(:,ii)); % data.VSSph(:,ii) are the spherical coords of the selected source
-```
-Finally, to let the user change among this method and the rest by using the pop-up menu, go to <code>‘GPopupmenu.m’</code> object and add a case for the new algorithm within the <code>switch conf.methods.names{get(handles.pmMethod, 'Value')}</code> statement:
-
-```Matlab
-                    case  'CLOSEST'
-                        conf.nCoeffs = 1;
-                        if isfield(conf,'CLOSEST')==0
-                            CLOSESTstart;
-                        end    
+       [H, I] = gCLOSEST(coord,VS.method.data);
 ```
 
 Credits and License
