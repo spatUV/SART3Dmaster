@@ -66,7 +66,9 @@ SART3D
 
 This will add the folder structure into Matlab’s path and will run the main GUI (including two figure windows, one for plan view and another for profile view). The toolbox is configured to load automatically a default two-loudspeaker set-up.
 
-![Image](doc/img/default.png)
+![Image](doc/img/GUI_1.png)
+![Image](doc/img/GUI_2.png)
+![Image](doc/img/GUI_3.png)
 
 *Step 3:* Check that the bottom pop-up menu contains the ASIO driver that you want to use. Here you can also select the desired rendering method. The displayed rendering methods are only the ones compatible with the specified loudspeaker setup. For example, WFS will not be available with the default two-loudspeaker setup. If you want to know how to change the setup go the next section.
 
@@ -78,7 +80,7 @@ This will add the folder structure into Matlab’s path and will run the main GU
 
 If you check the **Active loudspeakers** checkbox, you can see which are the active loudspeakers contributing to the rendering of a given sound source when you are moving it. For example, when using WFS with a circular loudspeaker setup you will see something like this. Note that graphics operations slow down the performance, so it is recommended to uncheck this option if you have moderate computational resources.
 
-![Image](doc/img/activels.png) ![Image](doc/img/activeaxes.png) 
+![Image](doc/img/activeaxes.png) 
 
 How can I change the setup?
 ---------------------------------
